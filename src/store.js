@@ -5,7 +5,7 @@ import axios from 'axios'
 
 Vue.use(Vuex)
 /* eslint-disable */
-export default new Vuex.Store({
+const store = new Vuex.Store({
   state: {
     alertValue: false,
     alertMessage: 'alert',
@@ -103,7 +103,7 @@ export default new Vuex.Store({
   actions: {
     FETCH_PROFILE_BY_ID ({commit}, id) {
       console.log('fetching2 ID: ' + id)
-      return axios.get(process.env.API_ENDPOINT + '/profile/' + id)
+      return axios.get("https://guarded-fjord-56608.herokuapp.com" + '/profile/' + id)
         .then((response) => {
           commit('SET_CLASS', response.data.class)
           commit('SET_ATTRIBUTES', response.data.attributes)
@@ -116,74 +116,74 @@ export default new Vuex.Store({
           console.log(error)
         })
     },
-    // FETCH_PROFILE ({commit}) {
-    //   console.log('fetching all profiles')
-    //   return axios.get(process.env.API_ENDPOINT + '/profile')
-    //     .then((response) => {
-    //       commit('SET_PROFILES', response.data)
-    //     })
-    //     .catch((error) => {
-    //       console.log(error)
-    //     })
-    // },
-    // CREATE_PROFILE ({commit}, newProfile) {
-    //   return axios.post(process.env.API_ENDPOINT + '/profile/new', newProfile)
-    //     .then((response) => {
-    //       console.log(newProfile)
-    //       commit('SET_ALERT_VALUE', true)
-    //       commit('SET_ALERT_MESSAGE', `Profile successfully created`)
-    //       console.log(response)
-    //     }).catch((error) => {
-    //       console.log(error)
-    //     })
-    // },
-    // UPDATE_PROFILE ({commit}, { id, profile }) {
-    //   return axios.put(process.env.API_ENDPOINT + '/profile/' + id, profile)
-    //     .then((response) => {
-    //       console.log(profile)
-    //       commit('SET_ALERT_VALUE', true)
-    //       commit('SET_ALERT_MESSAGE', `Profile successfully updated`)
-    //       console.log(response)
-    //     }).catch((error) => {
-    //       console.log(error)
-    //     })
-    // },
-    // FETCH_FACET_OPTIONS ({commit, state}) {
-    //   var responsePromise = state.facets.map(async (facet) => {
-    //     var query = `
-    //     SELECT DISTINCT ?facet ?facetLabel ?${facet.code}
-    //         WHERE {
-    //         ?entity wdt:P31 wd:${state.class.code}.
-    //         ?entity wdt:${facet.code} ?facet.
-    //         SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
-    //         }
-    //     `
-    //     return axios.post(process.env.WIKIDATA_SPARQL_ENDPOINT + 'sparql?query=' + encodeURIComponent(query))
-    //   })
-    //   console.log(responsePromise)
+    FETCH_PROFILE ({commit}) {
+      console.log('fetching all profiles')
+      return axios.get("https://guarded-fjord-56608.herokuapp.com" + '/profile')
+        .then((response) => {
+          commit('SET_PROFILES', response.data)
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    CREATE_PROFILE ({commit}, newProfile) {
+      return axios.post("https://guarded-fjord-56608.herokuapp.com" + '/profile/new', newProfile)
+        .then((response) => {
+          console.log(newProfile)
+          commit('SET_ALERT_VALUE', true)
+          commit('SET_ALERT_MESSAGE', `Profile successfully created`)
+          console.log(response)
+        }).catch((error) => {
+          console.log(error)
+        })
+    },
+    UPDATE_PROFILE ({commit}, { id, profile }) {
+      return axios.put("https://guarded-fjord-56608.herokuapp.com" + '/profile/' + id, profile)
+        .then((response) => {
+          console.log(profile)
+          commit('SET_ALERT_VALUE', true)
+          commit('SET_ALERT_MESSAGE', `Profile successfully updated`)
+          console.log(response)
+        }).catch((error) => {
+          console.log(error)
+        })
+    },
+    FETCH_FACET_OPTIONS ({commit, state}) {
+      var responsePromise = state.facets.map(async (facet) => {
+        var query = `
+        SELECT DISTINCT ?facet ?facetLabel ?${facet.code}
+            WHERE {
+            ?entity wdt:P31 wd:${state.class.code}.
+            ?entity wdt:${facet.code} ?facet.
+            SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+            }
+        `
+        return axios.post("https://query.wikidata.org/" + 'sparql?query=' + encodeURIComponent(query))
+      })
+      console.log(responsePromise)
 
-    //   Promise.all(responsePromise).then((completed) => {
-    //     completed.map((response) => {
-    //       commit('SET_FACET_OPTIONS', { facet: response.data.head.vars[2], options: response.data.results.bindings })
-    //     })
-    //   })
-    // },
-    // SUGGESTER ({commit}, { type, query }) {
-    //   return axios.post(process.env.WIKIDATA_API_ENDPOINT + `?action=wbsearchentities&format=json&origin=*&type=${type}&search=${query}&language=en`)
-    //     .then((response) => {
-    //       var commitMethod = ''
-    //       if (type === 'item') {
-    //         commitMethod = 'SET_SUGGESTED_ENTITY'
-    //       } else {
-    //         commitMethod = 'SET_SUGGESTED_PROPERTY'
-    //       }
-    //       commit(commitMethod, response.data.search)
-    //     }).catch((error) => {
-    //       console.log(error)
-    //     })
-    // },
+      Promise.all(responsePromise).then((completed) => {
+        completed.map((response) => {
+          commit('SET_FACET_OPTIONS', { facet: response.data.head.vars[2], options: response.data.results.bindings })
+        })
+      })
+    },
+    SUGGESTER ({commit}, { type, query }) {
+      return axios.post("https://www.wikidata.org/w/api.php" + `?action=wbsearchentities&format=json&origin=*&type=${type}&search=${query}&language=en`)
+        .then((response) => {
+          var commitMethod = ''
+          if (type === 'item') {
+            commitMethod = 'SET_SUGGESTED_ENTITY'
+          } else {
+            commitMethod = 'SET_SUGGESTED_PROPERTY'
+          }
+          commit(commitMethod, response.data.search)
+        }).catch((error) => {
+          console.log(error)
+        })
+    },
     LANGUAGES ({commit}) {
-      return axios.get(process.env.WIKIDATA_API_ENDPOINT + `?action=query&format=json&origin=*&meta=siteinfo&siprop=languages`)
+      return axios.get("https://www.wikidata.org/w/api.php" + `?action=query&format=json&origin=*&meta=siteinfo&siprop=languages`)
         .then((response) => {
           console.log(response.data.query.languages)
           commit('SET_LANGUAGES', response.data.query.languages)
@@ -191,18 +191,20 @@ export default new Vuex.Store({
           console.log(error)
         })
     },
-    // DELETE_PROFILE ({commit}, { name, id }) {
-    //   console.log('deleting: ' + id)
-    //   return axios.delete(process.env.API_ENDPOINT + '/profile/' + id)
-    //     .then((response) => {
-    //       commit('SET_ALERT_VALUE', true)
-    //       commit('SET_ALERT_MESSAGE', `Profile '${name}' successfully deleted`)
-    //     })
-    //     .catch((error) => {
-    //       commit('SET_ALERT_VALUE', true)
-    //       commit('SET_ALERT_MESSAGE', `Failure in deleting profile '${name}'`)
-    //       console.log(error)
-    //     })
-    // }
+    DELETE_PROFILE ({commit}, { name, id }) {
+      console.log('deleting: ' + id)
+      return axios.delete("https://guarded-fjord-56608.herokuapp.com" + '/profile/' + id)
+        .then((response) => {
+          commit('SET_ALERT_VALUE', true)
+          commit('SET_ALERT_MESSAGE', `Profile '${name}' successfully deleted`)
+        })
+        .catch((error) => {
+          commit('SET_ALERT_VALUE', true)
+          commit('SET_ALERT_MESSAGE', `Failure in deleting profile '${name}'`)
+          console.log(error)
+        })
+    }
   }
 })
+
+export default store

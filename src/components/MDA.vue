@@ -1,43 +1,56 @@
 <template>
-  <v-layout column align-center>
-    <h1 class="ml-3 mb-3 pt-4"> {{profileName}} </h1>
   <v-container fluid>
-    <div class="mt-4">
-
-    </div>
-    <v-text-field v-model="limit1"
-      label="Row Limit"
-    ></v-text-field>
-    <v-text-field v-model="limit2"
-      label="Column Limit"
-    ></v-text-field>
-    <v-select
-      v-model="selectRowSorting"
-      :items="items"
-      item-text="text"
-      item-value="value"
-      label="Row Sorting"
-      return-object
-    ></v-select>
-    <v-select
-      v-model="selectColSorting"
-      :items="items"
-      item-text="text"
-      item-value="value"
-      label="Column Sorting"
-      return-object
-    ></v-select>
+    <h1 class="ml-3 mb-3 pt-4"> {{profileName}} </h1>
+    <v-layout justify-space-around row>
+      <v-flex xs4>
+        <v-select
+          v-for="i in 2" :key="`facet${i}`"
+          v-model="selectedFacet[i-1]"
+          :items="facets"
+          item-text="name"
+          item-value="code"
+          :label="`Facet ${i}`"
+          return-object
+        ></v-select>
+        </v-flex>
+      <v-flex xs4 class="mx-4">
+        <v-text-field
+          v-for="i in 2" :key="`facet${i}`"
+          v-model="facetLimit[i-1]"
+          :label="`Facet ${i} Limit`"
+        ></v-text-field>
+        </v-flex>
+      <v-flex xs4>
+        <v-select
+          v-model="selectRowSorting"
+          :items="sortingOptions"
+          item-text="text"
+          item-value="value"
+          label="Row Sorting"
+          return-object
+        ></v-select>
+        <v-select
+          v-model="selectColSorting"
+          :items="sortingOptions"
+          item-text="text"
+          item-value="value"
+          label="Column Sorting"
+          return-object
+        ></v-select>
+        </v-flex>
+      </v-layout>
+      <!-- {{f1valuesAmount}} -->
     <v-btn round color="primary" @click="postQuery()">Post Query</v-btn>
     <v-progress-circular v-if="loading" :width="3" :size="50" indeterminate color="green"></v-progress-circular>
-    <div  v-for="f1value in f1values" v-bind:key=f1value>
+    <div  v-for="f1value in f1values" v-bind:key=f1value class="mt-3">
       <v-flex xs12>
-        <v-card>
-          <v-card-title class="headline">{{f1value}}</v-card-title>
+        <v-card class="px-1 pb-1">
+          <v-card-title class="headline">{{f1value}} ({{amount[f1value]}})</v-card-title>
           <v-layout row align-content-center class="horiz-scroll">
             <v-flex xs4 v-for="f2value in f2vv[f1value]" v-bind:key=f2value>
               <div class="pos-relative">
                 <v-card-title class="headline">{{f2value}} </v-card-title>
-                <v-card-text :id="f1value + f2value + 'amount'">Amount of entities in this facet: </v-card-text>
+                <v-card-text :id="f1value + f2value + 'amount'"></v-card-text>
                 <canvas :id="f1value + f2value"></canvas>
               </div>
             </v-flex>
@@ -46,8 +59,6 @@
       </v-flex>
     </div>
   </v-container>
-
-  </v-layout>
 </template>
 
 <script>
@@ -56,14 +67,22 @@ import Chart from 'chart.js'
 
 export default {
   name: 'App',
-  async fetch ({ store }) {
+  async beforeCreate () {
+    var store = this.$store
+    var router = this.$router.history.current
     await Promise.all([
       store.dispatch('LANGUAGES'),
-      store.dispatch('FETCH_PROFILE_BY_ID', 27)
+      store.dispatch('FETCH_PROFILE_BY_ID', router.params.id)
     ])
+    console.log("KELAR")
+    console.log(this.attributeCodes)
+    this.postQuery()
   },
   data () {
       return {
+        defaultAmountText: "Amount of entities in this facet: ",
+        selectedFacet: [],
+        amount: {},
         f1v: [],
         f2v: [],
         f2vv: {},
@@ -78,24 +97,29 @@ export default {
                 padding: 25,
                 suggestedMax: 100,
               }
+            }],
+            xAxes: [{
+                ticks: {
+                  autoSkip: false,
+                  maxRotation: 90,
+                  minRotation: 50
+                }
             }]
-          }
+          },
         },
         datacollection: {},
-        limit1: 5,
-        limit2: 5,
+        facetLimit: [5, 5],
         selectRowSorting: {text: 'Descending', value: 1},
         selectColSorting: {text: 'Descending', value: 1},
-        items: [
+        sortingOptions: [
           {text: 'Descending', value: 1},
           {text: 'Ascending', value: -1}
-        ]
+        ],
       }
   },
   computed: {
     entities () {
       var entities = JSON.parse(JSON.stringify(this.$store.state.entities1))
-
       return entities
     },
     headers () {
@@ -123,7 +147,21 @@ export default {
       return this.$store.state.class
     },
     facets () {
-      return this.$store.state.facets
+      var facets = this.$store.state.facets
+      this.selectedFacet[1] = this.selectedFacet[1] || facets[1]
+      this.selectedFacet[0] = this.selectedFacet[0] || facets[0]
+      return facets
+    },
+    attributeCodes () {
+      var attributes = this.$store.state.attributes
+      return attributes.map(attr => attr.code)
+    },
+    attributeNames () {
+      var attributes = this.$store.state.attributes
+      var length = 15
+      return attributes.map(attr => {
+        return attr.name.length > length ? attr.name.substring(0, length - 3) + "..." : attr.name.substring(0, length)
+      })
     },
     attributes () {
       var entities = this.$store.state.entities1
@@ -160,25 +198,34 @@ export default {
     subclass () {
       return this.$store.state.subclass
     },
+    filters () {
+      return this.$store.state.filters
+    },
     f1values () {
       return Array.from(this.$data.f1v)
     },
     f2values () {
       return Array.from(this.$data.f2v)
+    },
+    f1valuesAmount () {
+      return this.$data.result_amount
     }
   },
   methods: {
     f (f1, f2, topf1, topf2, entities) {
+      console.log("UWUWUWUWUWUWUWUWUWUWUWUWUW")
+      console.log(f1)
+      console.log(f2)
       var f1s = []
       var f2s = []
       var result = {}
 
       entities.forEach((entity) => {
-        if (entity[f1 + 'Label']) {
-          f1s.push(entity[f1 + 'Label'].value)
+        if (entity[f1.code + 'Label']) {
+          f1s.push(entity[f1.code + 'Label'].value)
         }
-        if (entity[f2 + 'Label']) {
-          f2s.push(entity[f2 + 'Label'].value)
+        if (entity[f2.code + 'Label']) {
+          f2s.push(entity[f2.code + 'Label'].value)
         }
       })
       f1s.push('none')
@@ -198,8 +245,8 @@ export default {
       })
 
       entities.forEach((entity) => {
-        var label1 = entity[f1 + 'Label'] || { value: 'none' }
-        var label2 = entity[f2 + 'Label'] || { value: 'none' }
+        var label1 = entity[f1.code + 'Label'] || { value: 'none' }
+        var label2 = entity[f2.code + 'Label'] || { value: 'none' }
 
         result[label1.value][label2.value].push(entity)
 
@@ -209,12 +256,36 @@ export default {
         result_amount_key1[label1.value][label2.value] = (result_amount_key1[label1.value][label2.value] || 0) + 1
       })
 
+      this.$data.f2vv = {}
+      f1s.forEach((key1) => {
+        var sort_key2 = []
+        var amt = 0
+        f2s.forEach((key2) => {
+          sort_key2.push({
+            'key': key2,
+            'amt': result_amount_key1[key1][key2] || 0
+          })
+        })
+        sort_key2.sort((a, b) => {
+          return (b.amt - a.amt) * this.$data.selectColSorting.value
+        })
+        sort_key2 = sort_key2.slice(0, topf2)
+        sort_key2.forEach((key2) => {
+          if(key2.amt) {
+            amt += key2.amt
+          }
+        })
+        result_amount[key1] = amt
+        this.$data.f2vv[key1] = sort_key2.map(e => e.key)
+      })
+
       var sort_key1 = []
       f1s.forEach((key1) => {
         sort_key1.push({
           'key': key1,
           'amt': result_amount[key1]
         })
+        this.$data.amount[key1] = result_amount[key1]
       })
 
       sort_key1.sort((a, b) => {
@@ -222,31 +293,30 @@ export default {
       })
 
       sort_key1 = sort_key1.slice(0, topf1)
-
-      this.$data.f1v = []
-      this.$data.f2v = Array.from(f2s)
-      sort_key1.forEach((key1) => {
-        this.$data.f1v.push(key1.key)
-        var sort_key2 = []
-        f2s.forEach((key2) => {
-          sort_key2.push({
-            'key': key2,
-            'amt': result_amount_key1[key1.key][key2]
-          })
-        })
-        sort_key2.sort((a, b) => {
-            return (b.amt - a.amt) * this.$data.selectColSorting.value
-          })
-        sort_key2 = sort_key2.slice(0, topf2)
-        this.$data.f2vv[key1.key] = sort_key2.map(e => e.key)
-      })
-      console.log(this.$data.f2vv)
+      this.$data.f1v = sort_key1.map(e => e.key)
+      // this.$data.f2v = Array.from(f2s)
+      // sort_key1.forEach((key1) => {
+      //   this.$data.f1v.push(key1.key)
+      //   var sort_key2 = []
+      //   f2s.forEach((key2) => {
+      //     sort_key2.push({
+      //       'key': key2,
+      //       'amt': result_amount_key1[key1.key][key2]
+      //     })
+      //   })
+      //   sort_key2.sort((a, b) => {
+      //       return (b.amt - a.amt) * this.$data.selectColSorting.value
+      //     })
+      //   sort_key2 = sort_key2.slice(0, topf2)
+      //   this.$data.f2vv[key1.key] = sort_key2.map(e => e.key)
+      // })
+      // console.log(this.$data.f2vv)
 
       return result
     },
     createChart (chartId, chartData) {
+      console.log(chartData)
       const ctx = document.getElementById(chartId)
-
       new Chart(ctx, {
         type: 'bar',
         data: chartData,
@@ -255,26 +325,44 @@ export default {
     },
     postQuery () {
       this.loading = true
+      var queryLabel = this.attributeCodes.reduce((acc, code) => {
+        return acc + ` ?${code}Label`
+      }, "")
+      queryLabel = this.facets.reduce((acc, facet) => {
+        return acc + ` ?${facet.code}Label`
+      }, queryLabel)
+      console.log(queryLabel)
+
+      var queryFilter = this.filters.reduce((acc, filter) => {
+        return acc + ` ?entity wdt:${filter.prop.code} wd:${filter.value.code}.`
+      }, "")
+      console.log(queryFilter)
+
+      var queryOptional = this.attributeCodes.reduce((acc, code) => {
+        return acc + ` OPTIONAL {?entity wdt:${code} ?${code}}`
+      }, "")
+      queryOptional = this.facets.reduce((acc, facet) => {
+        return acc + ` OPTIONAL {?entity wdt:${facet.code} ?${facet.code}}`
+      }, queryOptional)
+      console.log(queryOptional)
+
+      var includeSubclass = ''
+      if (this.subclass) includeSubclass = '/wdt:P279*'
 
       var query = `
-        SELECT ?entity ?entityLabel ?p106Label ?p21Label ?p26Label ?p569Label ?p102Label ?p140Label
+        SELECT ?entity ?entityLabel ${queryLabel}
         WHERE {
-          ?entity wdt:P31 wd:Q5.
-          ?entity wdt:P27 wd:Q252.
-          OPTIONAL {?entity wdt:P106 ?p106}
-          OPTIONAL {?entity wdt:P21 ?p21}
-          OPTIONAL {?entity wdt:P26 ?p26}
-          OPTIONAL {?entity wdt:P569 ?p569}
-          OPTIONAL {?entity wdt:P102 ?p102}
-          OPTIONAL {?entity wdt:P140 ?p140}
+          ?entity wdt:P31${includeSubclass} wd:${this.class.code}.
+          ${queryFilter}
+          ${queryOptional}
           SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
         }
       `
+      console.log(query)
 
       this.$axios.post('https://query.wikidata.org/sparql?query=' + encodeURIComponent(query))
         .then((response) => {
           var entities = response.data.results.bindings
-          console.log('================================LOLOLOLOLOL')
           this.$store.commit('SET_ENTITIES1', entities)
 
           entities.forEach((entity) => {
@@ -282,9 +370,15 @@ export default {
             entity.score = (exist / 5) * 100
           })
 
-          var dataset = this.f('p106', 'p21', this.$data.limit1, this.limit2, entities)
+          console.log("before UWUWUWUWUWUWUWUWUWUWUWUWU")
+          console.log(this.$data.selectedFacet)
+          var dataset = this.f( this.$data.selectedFacet[0],
+                                this.$data.selectedFacet[1],
+                                this.$data.facetLimit[0],
+                                this.$data.facetLimit[1],
+                                entities)
           console.log(dataset)
-          var attributes = ['p26', 'p569', 'p102', 'p140']
+          var attributes = this.attributeCodes
 
           this.$data.f1v.forEach((value1) => {
             this.$data.datacollection[value1] = {}
@@ -293,7 +387,7 @@ export default {
                 return
               }
               var chartData = {
-                labels: ['spouse', 'date of birth', 'political party', 'religion'],
+                labels: this.attributeNames,
                 datasets: []
               }
               var data = []
@@ -313,7 +407,7 @@ export default {
                     return acc + 1
                   }
                 }, 0)
-                data.push(sum / size * 100)
+                data.push(Number.parseFloat(sum / size * 100).toFixed(2))
               })
 
               // console.log(data)
@@ -323,26 +417,20 @@ export default {
                 data: data
               })
 
-              // console.log(JSON.stringify(chartData))
               this.$nextTick(() => {
                 const ctx = document.getElementById(value1 + value2 + 'amount')
-                ctx.innerText = ctx.innerText + size
+                ctx.innerText = this.defaultAmountText + size
                 this.createChart(value1 + value2, chartData)
               })
             })
           })
 
           this.loading = false
-          // this.warning = (this.entities.length === 20000)
         })
         .catch((error) => {
           console.log(error)
         })
     }
-  },
-  mounted: function () {
-    this.postQuery()
-    // this.$forceUpdate()
   }
 }
 </script>
