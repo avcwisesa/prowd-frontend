@@ -74,7 +74,6 @@ export default {
       store.dispatch('LANGUAGES'),
       store.dispatch('FETCH_PROFILE_BY_ID', router.params.id)
     ])
-    console.log("KELAR")
     console.log(this.attributeCodes)
     this.postQuery()
   },
@@ -213,9 +212,6 @@ export default {
   },
   methods: {
     f (f1, f2, topf1, topf2, entities) {
-      console.log("UWUWUWUWUWUWUWUWUWUWUWUWUW")
-      console.log(f1)
-      console.log(f2)
       var f1s = []
       var f2s = []
       var result = {}
@@ -370,8 +366,6 @@ export default {
             entity.score = (exist / 5) * 100
           })
 
-          console.log("before UWUWUWUWUWUWUWUWUWUWUWUWU")
-          console.log(this.$data.selectedFacet)
           var dataset = this.f( this.$data.selectedFacet[0],
                                 this.$data.selectedFacet[1],
                                 this.$data.facetLimit[0],

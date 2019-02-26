@@ -39,12 +39,11 @@
 
 export default {
   beforeCreate () {
-    console.log("coy")
     this.$store.dispatch('FETCH_PROFILE')
   },
   data () {
     return {
-      API_ENDPOINT: "https://guarded-fjord-56608.herokuapp.com",
+      API_ENDPOINT: 'http://prowd.id:8080',
       facetValue: {},
       query: '',
       datacollection: null

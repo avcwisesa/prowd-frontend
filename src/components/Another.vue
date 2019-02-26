@@ -274,7 +274,6 @@ export default {
       this.$axios.post('https://query.wikidata.org/sparql?query=' + encodeURIComponent(query))
         .then((response) => {
           var entities = response.data.results.bindings
-          console.log('================================LOLOLOLOLOL')
           this.$store.commit('SET_ENTITIES1', entities)
 
           entities.forEach((entity) => {
@@ -316,7 +315,6 @@ export default {
                 data.push(sum / size * 100)
               })
 
-              // console.log(data)
               chartData.datasets.push({
                 label: 'Average Completeness',
                 backgroundColor: '#41b883',

@@ -103,7 +103,7 @@ const store = new Vuex.Store({
   actions: {
     FETCH_PROFILE_BY_ID ({commit}, id) {
       console.log('fetching2 ID: ' + id)
-      return axios.get("https://guarded-fjord-56608.herokuapp.com" + '/profile/' + id)
+      return axios.get('http://prowd.id:8080' + '/profile/' + id)
         .then((response) => {
           commit('SET_CLASS', response.data.class)
           commit('SET_ATTRIBUTES', response.data.attributes)
@@ -118,7 +118,8 @@ const store = new Vuex.Store({
     },
     FETCH_PROFILE ({commit}) {
       console.log('fetching all profiles')
-      return axios.get("https://guarded-fjord-56608.herokuapp.com" + '/profile')
+      console.log(process.env)
+      return axios.get('http://prowd.id:8080' + '/profile')
         .then((response) => {
           commit('SET_PROFILES', response.data)
         })
@@ -127,7 +128,7 @@ const store = new Vuex.Store({
         })
     },
     CREATE_PROFILE ({commit}, newProfile) {
-      return axios.post("https://guarded-fjord-56608.herokuapp.com" + '/profile/new', newProfile)
+      return axios.post('http://prowd.id:8080' + '/profile/new', newProfile)
         .then((response) => {
           console.log(newProfile)
           commit('SET_ALERT_VALUE', true)
@@ -138,7 +139,7 @@ const store = new Vuex.Store({
         })
     },
     UPDATE_PROFILE ({commit}, { id, profile }) {
-      return axios.put("https://guarded-fjord-56608.herokuapp.com" + '/profile/' + id, profile)
+      return axios.put('http://prowd.id:8080' + '/profile/' + id, profile)
         .then((response) => {
           console.log(profile)
           commit('SET_ALERT_VALUE', true)
@@ -193,7 +194,7 @@ const store = new Vuex.Store({
     },
     DELETE_PROFILE ({commit}, { name, id }) {
       console.log('deleting: ' + id)
-      return axios.delete("https://guarded-fjord-56608.herokuapp.com" + '/profile/' + id)
+      return axios.delete('http://prowd.id:8080' + '/profile/' + id)
         .then((response) => {
           commit('SET_ALERT_VALUE', true)
           commit('SET_ALERT_MESSAGE', `Profile '${name}' successfully deleted`)

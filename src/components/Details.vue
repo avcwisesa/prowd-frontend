@@ -329,9 +329,7 @@ export default {
       }
     },
     profileID () {
-      console.log("asdf")
-      console.log(this.$vnode)
-      return this.$vnode.data.key.split('/')[3]
+      return this.$route.params.id
     },
     suggestedEntity () {
       var entities = []

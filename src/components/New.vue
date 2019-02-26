@@ -228,7 +228,7 @@ export default {
   },
   data () {
     return {
-      API_ENDPOINT: "https://guarded-fjord-56608.herokuapp.com",
+      API_ENDPOINT: 'http://prowd.id:8080',
       profileName: '',
       profileClass: { label: 'Empty', id: 'undefined', description: '-' },
       facets: [],
