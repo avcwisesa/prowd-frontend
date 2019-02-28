@@ -12,10 +12,10 @@
             Over a single facet combination
             <ul>
               <li>
-                How is the overall view of the completeness of attributes of interest?
+                How is the overall view of the completeness of attributes of interest for that single facet? Is the facet generally complete, or generally incomplete?
               </li>
               <li>
-                Which attribute is the most complete, and which is the least complete?
+                Which attribute is the most complete, and which is the least complete with respect to the facet? How wide is the gap between the most complete attribute vs. the least complete attribute?
               </li>
             </ul>
           </li>
@@ -23,10 +23,16 @@
             Over multiple facet combinations:
             <ul>
               <li>
-                How is the overall completeness state of a facet combination compared to others?
+                How is the overall completeness picture of the class of interest by looking at (a sample of) the completeness state of the facet combinations of the class? Which attributes are generally complete, and which are generally incomplete for that class?
               </li>
               <li>
-                Does a facet combination have an (in-)completeness anomaly (that is, complete for attributes that are incomplete in other facet combinations; or incomplete for attributes that are complete in other facet combinations)?
+                How is the amount of entities distributed according to different facet values? Is there any amount gap between different facets?
+                </li>
+              <li>
+                How does the attribute completeness state of a facet combination compare to others? Which facet combination is the most complete, and the least complete?
+              </li>
+              <li>
+                Does a facet combination have an anomaly (that is, complete for attributes that are incomplete in other facet combinations; or incomplete for attributes that are complete in other facet combinations).
               </li>
             </ul>
           </li>
@@ -47,7 +53,7 @@
               <a href=https://thenounproject.com>Noun Project</a>
             </li>
             <li>
-              <a href=https://www.iconfinder.com>ICONFINDER</a>
+              <a href=https://www.iconfinder.com>Iconfinder</a>
             </li>
           </ul>
 </div>
