@@ -40,6 +40,10 @@
         </v-flex>
       </v-layout>
       <!-- {{f1valuesAmount}} -->
+    <v-switch
+      label="Include 'none' in facet value"
+      v-model="enableNone"
+    ></v-switch>
     <v-btn round color="primary" @click="postQuery()">Post Query</v-btn>
     <v-progress-circular v-if="loading" :width="3" :size="50" indeterminate color="green"></v-progress-circular>
     <div  v-for="f1value in f1values" v-bind:key=f1value class="mt-3">
@@ -81,6 +85,7 @@ export default {
       return {
         defaultAmountText: "Amount of entities in this facet: ",
         selectedFacet: [],
+        enableNone: false,
         amount: {},
         f1v: [],
         f2v: [],
@@ -224,6 +229,7 @@ export default {
           f2s.push(entity[f2.code + 'Label'].value)
         }
       })
+
       f1s.push('none')
       f2s.push('none')
 
@@ -251,6 +257,11 @@ export default {
         // add amount on key1Xkey2
         result_amount_key1[label1.value][label2.value] = (result_amount_key1[label1.value][label2.value] || 0) + 1
       })
+
+      if (!this.$data.enableNone){
+        f1s.delete('none')
+        f2s.delete('none')
+      }
 
       this.$data.f2vv = {}
       f1s.forEach((key1) => {
@@ -290,23 +301,6 @@ export default {
 
       sort_key1 = sort_key1.slice(0, topf1)
       this.$data.f1v = sort_key1.map(e => e.key)
-      // this.$data.f2v = Array.from(f2s)
-      // sort_key1.forEach((key1) => {
-      //   this.$data.f1v.push(key1.key)
-      //   var sort_key2 = []
-      //   f2s.forEach((key2) => {
-      //     sort_key2.push({
-      //       'key': key2,
-      //       'amt': result_amount_key1[key1.key][key2]
-      //     })
-      //   })
-      //   sort_key2.sort((a, b) => {
-      //       return (b.amt - a.amt) * this.$data.selectColSorting.value
-      //     })
-      //   sort_key2 = sort_key2.slice(0, topf2)
-      //   this.$data.f2vv[key1.key] = sort_key2.map(e => e.key)
-      // })
-      // console.log(this.$data.f2vv)
 
       return result
     },
