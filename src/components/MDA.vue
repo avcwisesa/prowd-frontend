@@ -44,6 +44,7 @@
       label="Include 'none' in facet value"
       v-model="enableNone"
     ></v-switch>
+
     <v-btn round color="primary" @click="postQuery()">Post Query</v-btn>
     <v-progress-circular v-if="loading" :width="3" :size="50" indeterminate color="green"></v-progress-circular>
     <div  v-for="f1value in f1values" v-bind:key=f1value class="mt-3">
@@ -62,6 +63,36 @@
         </v-card>
       </v-flex>
     </div>
+    <v-flex v-if="!loading" xs12>
+      <v-card class="mt-3 pb-1">
+        <v-card-title class="headline">Insights</v-card-title>
+        Facets with most entries:
+        <ul>
+          <li v-for="value in insights.top" :key="value">{{ value }}</li>
+        </ul>
+        <ul>
+          <li v-for="value in insights.top" :key="value">
+            <strong>{{ value }}</strong>
+            's most completed attribute is 
+            <strong>{{ insights.topValues[value].highest.name }}</strong>
+          </li>
+        </ul>
+        Higher than normal:
+        <ul>
+          <li v-for="entry in insights.abnormalValues.high" :key="entry.facet1+entry.facet2">
+            the <strong>{{ entry.attr }}</strong> of 
+            <strong>{{ entry.facet1 }}-{{ entry.facet2 }}</strong>
+          </li>
+        </ul>
+        Lower than normal:
+        <ul>
+          <li v-for="entry in insights.abnormalValues.low" :key="entry.facet1+entry.facet2">
+            the <strong>{{ entry.attr }}</strong> of 
+            <strong>{{ entry.facet1 }}-{{ entry.facet2 }}</strong>
+          </li>
+        </ul>
+      </v-card>
+    </v-flex>
   </v-container>
 </template>
 
@@ -78,11 +109,18 @@ export default {
       store.dispatch('LANGUAGES'),
       store.dispatch('FETCH_PROFILE_BY_ID', router.params.id)
     ])
-    console.log(this.attributeCodes)
+    // console.log(this.attributeCodes)
     this.postQuery()
   },
   data () {
       return {
+        insights: {
+          top: [],
+          abnormalValues: {
+            high: [],
+            low: []
+          }
+        },
         defaultAmountText: "Amount of entities in this facet: ",
         selectedFacet: [],
         enableNone: false,
@@ -126,16 +164,6 @@ export default {
       var entities = JSON.parse(JSON.stringify(this.$store.state.entities1))
       return entities
     },
-    headers () {
-      var entityClass = this.$store.state.class
-      var ret = [].concat(this.$store.state.attributes)
-      ret = ret.map(obj => {
-        return { text: obj.name + ' (' + obj.code + ')', value: obj.code + 'Exist' }
-      })
-      ret = [{ text: entityClass.name + ' (' + entityClass.code + ')', value: 'classLabel' }].concat(ret)
-      var headers = ret.concat({ text: 'completeness score', value: 'score' })
-      return headers
-    },
     languages () {
       return this.$store.state.languages
     },
@@ -168,30 +196,7 @@ export default {
       })
     },
     attributes () {
-      var entities = this.$store.state.entities1
-      var attributes = this.$store.state.attributes
-      var amount = {}
-
-      attributes.forEach(function (attr) {
-        amount[attr.code] = 0
-      })
-
-      entities.forEach(function (entity) {
-        attributes.forEach(function (attr) {
-          if (entity[attr.code + 'Exist']) {
-            amount[attr.code] += 1
-          }
-        })
-      })
-
-      attributes.forEach(function (attr) {
-        attr.count = amount[attr.code]
-        attr.score = (100 * attr.count / entities.length)
-      })
-
-      return attributes.sort(function (a, b) {
-        return a.count - b.count
-      })
+      return this.$store.state.attributes
     },
     profileName () {
       return this.$store.state.profileName
@@ -305,7 +310,7 @@ export default {
       return result
     },
     createChart (chartId, chartData) {
-      console.log(chartData)
+      // console.log(chartData)
       const ctx = document.getElementById(chartId)
       new Chart(ctx, {
         type: 'bar',
@@ -321,12 +326,12 @@ export default {
       queryLabel = this.facets.reduce((acc, facet) => {
         return acc + ` ?${facet.code}Label`
       }, queryLabel)
-      console.log(queryLabel)
+      // console.log(queryLabel)
 
       var queryFilter = this.filters.reduce((acc, filter) => {
         return acc + ` ?entity wdt:${filter.prop.code} wd:${filter.value.code}.`
       }, "")
-      console.log(queryFilter)
+      // console.log(queryFilter)
 
       var queryOptional = this.attributeCodes.reduce((acc, code) => {
         return acc + ` OPTIONAL {?entity wdt:${code} ?${code}}`
@@ -334,7 +339,7 @@ export default {
       queryOptional = this.facets.reduce((acc, facet) => {
         return acc + ` OPTIONAL {?entity wdt:${facet.code} ?${facet.code}}`
       }, queryOptional)
-      console.log(queryOptional)
+      // console.log(queryOptional)
 
       var includeSubclass = ''
       if (this.subclass) includeSubclass = '/wdt:P279*'
@@ -348,7 +353,7 @@ export default {
           SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
         }
       `
-      console.log(query)
+      // console.log(query)
 
       this.$axios.post('https://query.wikidata.org/sparql?query=' + encodeURIComponent(query))
         .then((response) => {
@@ -365,8 +370,22 @@ export default {
                                 this.$data.facetLimit[0],
                                 this.$data.facetLimit[1],
                                 entities)
-          console.log(dataset)
+          // console.log(dataset)
           var attributes = this.attributeCodes
+
+          this.$data.insights.top = this.$data.f1v.slice(0, 3)
+          this.$data.insights.topValues = {}
+          this.$data.insights.top.forEach((value) => {
+            this.$data.insights.topValues[value] = {}
+            this.attributeCodes.forEach((code) => {
+              this.$data.insights.topValues[value][code] = []
+            })
+          })
+          this.attributeCodes.forEach((code) => {
+            this.$data.insights[code] = {}
+            this.$data.insights[code].values = []
+          })
+          console.log(this.$data.insights)
 
           this.$data.f1v.forEach((value1) => {
             this.$data.datacollection[value1] = {}
@@ -395,10 +414,18 @@ export default {
                     return acc + 1
                   }
                 }, 0)
-                data.push(Number.parseFloat(sum / size * 100).toFixed(2))
+                var percentage = Number.parseFloat(sum / size * 100).toFixed(2)
+                // console.log(value1, value2, attribute, percentage)
+                this.$data.insights[attribute].values.push({
+                  facet1: value1,
+                  facet2: value2,
+                  value: percentage
+                })
+                data.push(percentage)
               })
 
               // console.log(data)
+              // console.log(this.attributeNames)
               chartData.datasets.push({
                 label: 'Average Completeness',
                 backgroundColor: '#41b883',
@@ -412,6 +439,63 @@ export default {
               })
             })
           })
+
+          this.attributes.forEach((attr) => {
+            this.$data.insights[attr.code].values.sort((a,b) => a.value - b.value)
+            var len = this.$data.insights[attr.code].values.length
+            var q2 = parseInt(len / 2)
+            var q1Value = this.$data.insights[attr.code].values[parseInt(q2 / 2)].value
+            var q3Value = this.$data.insights[attr.code].values[parseInt( (len + q2) / 2)].value
+            // console.log(q1Value, q2, q3Value)
+            var iqr = q3Value - q1Value
+            // console.log(iqr, typeof(iqr))
+            // console.log(q1Value, typeof(q1Value))
+            // console.log(q3Value, typeof(q3Value))
+            var top = parseFloat(q3Value) + (iqr * 1.5)
+            var bottom = parseFloat(q1Value) - (iqr * 1.5)
+            // console.log("top & bottom", top, bottom)
+            // var avg = arr.reduce((acc, e) => acc + parseInt(e.value), 0) / arr.length
+            this.$data.insights[attr.code].values.forEach((entry) => {
+              if (entry.value > top) {
+                this.$data.insights.abnormalValues.high.push({
+                  attr: attr.name,
+                  facet1: entry.facet1,
+                  facet2: entry.facet2,
+                  value: entry.value
+                })
+                // console.log("Higher than normal", attr.name, entry.facet1, entry.facet2, entry.value, top)
+              } else if (entry.value < bottom) {
+                this.$data.insights.abnormalValues.low.push({
+                  attr: attr.name,
+                  facet1: entry.facet1,
+                  facet2: entry.facet2,
+                  value: entry.value
+                })
+                // console.log("Lower than normal", attr.name, entry.facet1, entry.facet2, entry.value, bottom)
+              }
+              this.$data.insights.top.forEach((value) => {
+                if (entry.facet1 == value) {
+                  this.$data.insights.topValues[value][attr.code].push(entry.value)
+                }
+              })
+            })
+
+          })
+          this.$data.insights.top.forEach((value) => {
+            var highest = { value: 0}
+            this.attributes.forEach((attr) => {
+              // console.log(this.$data.insights.topValues)
+              var tmp = this.$data.insights.topValues[value][attr.code].reduce((acc, val) => acc + parseFloat(val), 0)
+              tmp /= this.$data.insights.topValues[value][attr.code].length
+              if (tmp >= highest.value) {
+                highest.name = attr.name,
+                highest.value = tmp
+              }
+            })
+            // console.log(value, highest)
+            this.$data.insights.topValues[value].highest = highest
+          })
+          console.log(this.$data.insights)
 
           this.loading = false
         })

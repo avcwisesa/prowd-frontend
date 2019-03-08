@@ -67,11 +67,11 @@ const router  = new Router({
 })
 
 router.beforeEach((to, from, next) => {
-  console.log(to)
-  console.log('to')
-  console.log(from)
-  console.log('from')
-  console.log(next)
+  // console.log(to)
+  // console.log('to')
+  // console.log(from)
+  // console.log('from')
+  // console.log(next)
 
   if (to.path.split('/')[1] === '') {
     store.commit('SET_JUMBOTRON_VALUE', true)
@@ -79,7 +79,7 @@ router.beforeEach((to, from, next) => {
     store.commit('SET_JUMBOTRON_VALUE', false)
   }
 
-  console.log(store)
+  // console.log(store)
 
   next()
 })

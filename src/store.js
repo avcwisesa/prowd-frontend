@@ -102,7 +102,7 @@ const store = new Vuex.Store({
   },
   actions: {
     FETCH_PROFILE_BY_ID ({commit}, id) {
-      console.log('fetching2 ID: ' + id)
+      // console.log('fetching2 ID: ' + id)
       return axios.get('http://prowd.id:8080' + '/profile/' + id)
         .then((response) => {
           commit('SET_CLASS', response.data.class)
@@ -117,8 +117,8 @@ const store = new Vuex.Store({
         })
     },
     FETCH_PROFILE ({commit}) {
-      console.log('fetching all profiles')
-      console.log(process.env)
+      // console.log('fetching all profiles')
+      // console.log(process.env)
       return axios.get('http://prowd.id:8080' + '/profile')
         .then((response) => {
           commit('SET_PROFILES', response.data)
@@ -130,21 +130,21 @@ const store = new Vuex.Store({
     CREATE_PROFILE ({commit}, newProfile) {
       return axios.post('http://prowd.id:8080' + '/profile/new', newProfile)
         .then((response) => {
-          console.log(newProfile)
+          // console.log(newProfile)
           commit('SET_ALERT_VALUE', true)
           commit('SET_ALERT_MESSAGE', `Profile successfully created`)
-          console.log(response)
+          // console.log(response)
         }).catch((error) => {
-          console.log(error)
+          // console.log(error)
         })
     },
     UPDATE_PROFILE ({commit}, { id, profile }) {
       return axios.put('http://prowd.id:8080' + '/profile/' + id, profile)
         .then((response) => {
-          console.log(profile)
+          // console.log(profile)
           commit('SET_ALERT_VALUE', true)
           commit('SET_ALERT_MESSAGE', `Profile successfully updated`)
-          console.log(response)
+          // console.log(response)
         }).catch((error) => {
           console.log(error)
         })
@@ -161,7 +161,7 @@ const store = new Vuex.Store({
         `
         return axios.post("https://query.wikidata.org/" + 'sparql?query=' + encodeURIComponent(query))
       })
-      console.log(responsePromise)
+      // console.log(responsePromise)
 
       Promise.all(responsePromise).then((completed) => {
         completed.map((response) => {
@@ -186,14 +186,14 @@ const store = new Vuex.Store({
     LANGUAGES ({commit}) {
       return axios.get("https://www.wikidata.org/w/api.php" + `?action=query&format=json&origin=*&meta=siteinfo&siprop=languages`)
         .then((response) => {
-          console.log(response.data.query.languages)
+          // console.log(response.data.query.languages)
           commit('SET_LANGUAGES', response.data.query.languages)
         }).catch((error) => {
           console.log(error)
         })
     },
     DELETE_PROFILE ({commit}, { name, id }) {
-      console.log('deleting: ' + id)
+      // console.log('deleting: ' + id)
       return axios.delete('http://prowd.id:8080' + '/profile/' + id)
         .then((response) => {
           commit('SET_ALERT_VALUE', true)
