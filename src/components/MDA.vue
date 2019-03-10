@@ -47,6 +47,68 @@
 
     <v-btn round color="primary" @click="postQuery()">Post Query</v-btn>
     <v-progress-circular v-if="loading" :width="3" :size="50" indeterminate color="green"></v-progress-circular>
+    <v-flex v-if="!loading" xs12>
+      <v-card class="mt-3 pb-1">
+        <v-card-title class="headline">Insights</v-card-title>
+        <v-card-text class="text-xs-left">
+          <v-layout row align-content-center>
+            <v-flex xs6>
+              <div class="subheading font-weight-medium">Most Populated Facets:</div>
+              <ul>
+                <li v-for="value in insights.top" :key="value">
+                  <strong>{{ value }}</strong> ({{amount[value]}})
+                </li>
+              </ul>
+              <div class="subheading font-weight-medium mt-3">Least Populated Facets:</div>
+              <ul>
+                <li v-for="value in insights.bottom" :key="value">
+                  <strong>{{ value }}</strong> ({{amount[value]}})
+                </li>
+              </ul>
+              <!--<ul>
+                <li v-for="value in insights.top" :key="value">
+                  <strong>{{ value }}</strong>
+                  's most completed attribute is 
+                  <strong>{{ insights.topValues[value].highest.name }}</strong>
+                </li>
+              </ul>--> 
+              <div class="subheading font-weight-medium mt-3">Facet Where Attributes are Most Complete:</div>
+              <ul>
+                <li v-for="entry in attributes" :key="entry.code">
+                  <strong>{{ entry.name }}</strong> is most complete on 
+                  <strong>{{ insights[entry.code].most.name }}</strong>
+                  ({{ insights[entry.code].most.value.toFixed(2) }}%)
+                </li>
+              </ul>
+              <div class="subheading font-weight-medium mt-3">Facet Where Attributes are Least Complete:</div>
+              <ul>
+                <li v-for="entry in attributes" :key="entry.code">
+                  <strong>{{ entry.name }}</strong> is least complete on 
+                  <strong>{{ insights[entry.code].least.name }}</strong>
+                  ({{ insights[entry.code].least.value.toFixed(2) }}%)
+                </li>
+              </ul>
+            </v-flex>
+            <v-flex xs6>
+              <div class="subheading font-weight-medium">Attributes with Outlier Completeness (<span class="blue--text font-weight-bold">High</span>):</div>
+              <ul>
+                <li v-for="entry in insights.abnormalValues.high" :key="entry.facet1+entry.facet2">
+                  the value of <strong>{{ entry.attr }}</strong> on 
+                  <strong>{{ entry.facet1 }}-{{ entry.facet2 }}</strong>
+                </li>
+              </ul>
+              <div class="subheading font-weight-medium mt-3">Attributes with Outlier Completeness (<span class="red--text font-weight-bold">Low</span>):</div>
+              <ul>
+                <li v-for="entry in insights.abnormalValues.low" :key="entry.facet1+entry.facet2">
+                  the value of <strong>{{ entry.attr }}</strong> on 
+                  <strong>{{ entry.facet1 }}-{{ entry.facet2 }}</strong>
+                </li>
+              </ul>
+            </v-flex>
+          </v-layout>
+        </v-card-text>
+      </v-card>
+    </v-flex>
     <div  v-for="f1value in f1values" v-bind:key=f1value class="mt-3">
       <v-flex xs12>
         <v-card class="px-1 pb-1">
@@ -63,36 +125,6 @@
         </v-card>
       </v-flex>
     </div>
-    <v-flex v-if="!loading" xs12>
-      <v-card class="mt-3 pb-1">
-        <v-card-title class="headline">Insights</v-card-title>
-        Facets with most entries:
-        <ul>
-          <li v-for="value in insights.top" :key="value">{{ value }}</li>
-        </ul>
-        <ul>
-          <li v-for="value in insights.top" :key="value">
-            <strong>{{ value }}</strong>
-            's most completed attribute is 
-            <strong>{{ insights.topValues[value].highest.name }}</strong>
-          </li>
-        </ul>
-        Higher than normal:
-        <ul>
-          <li v-for="entry in insights.abnormalValues.high" :key="entry.facet1+entry.facet2">
-            the <strong>{{ entry.attr }}</strong> of 
-            <strong>{{ entry.facet1 }}-{{ entry.facet2 }}</strong>
-          </li>
-        </ul>
-        Lower than normal:
-        <ul>
-          <li v-for="entry in insights.abnormalValues.low" :key="entry.facet1+entry.facet2">
-            the <strong>{{ entry.attr }}</strong> of 
-            <strong>{{ entry.facet1 }}-{{ entry.facet2 }}</strong>
-          </li>
-        </ul>
-      </v-card>
-    </v-flex>
   </v-container>
 </template>
 
@@ -116,6 +148,7 @@ export default {
       return {
         insights: {
           top: [],
+          bottom: [],
           abnormalValues: {
             high: [],
             low: []
@@ -374,6 +407,7 @@ export default {
           var attributes = this.attributeCodes
 
           this.$data.insights.top = this.$data.f1v.slice(0, 3)
+          this.$data.insights.bottom = this.$data.f1v.slice(-3).reverse()
           this.$data.insights.topValues = {}
           this.$data.insights.top.forEach((value) => {
             this.$data.insights.topValues[value] = {}
@@ -385,7 +419,7 @@ export default {
             this.$data.insights[code] = {}
             this.$data.insights[code].values = []
           })
-          console.log(this.$data.insights)
+          // console.log(this.$data.insights)
 
           this.$data.f1v.forEach((value1) => {
             this.$data.datacollection[value1] = {}
@@ -455,7 +489,14 @@ export default {
             var bottom = parseFloat(q1Value) - (iqr * 1.5)
             // console.log("top & bottom", top, bottom)
             // var avg = arr.reduce((acc, e) => acc + parseInt(e.value), 0) / arr.length
+            var valuesByFacet = {}
+            valuesByFacet.values = []
             this.$data.insights[attr.code].values.forEach((entry) => {
+              if (!valuesByFacet[entry.facet1]) {
+                 valuesByFacet[entry.facet1] = []
+              }
+              valuesByFacet[entry.facet1].push(entry.value)
+
               if (entry.value > top) {
                 this.$data.insights.abnormalValues.high.push({
                   attr: attr.name,
@@ -473,28 +514,39 @@ export default {
                 })
                 // console.log("Lower than normal", attr.name, entry.facet1, entry.facet2, entry.value, bottom)
               }
-              this.$data.insights.top.forEach((value) => {
-                if (entry.facet1 == value) {
-                  this.$data.insights.topValues[value][attr.code].push(entry.value)
-                }
+              // this.$data.insights.top.forEach((value) => {
+              //   if (entry.facet1 == value) {
+              //     this.$data.insights.topValues[value][attr.code].push(entry.value)
+              //   }
+              // })
+            })
+            // console.log(valuesByFacet)
+            this.$data.f1v.forEach((facet) => {
+              var avg = valuesByFacet[facet].reduce((acc, e) => acc + parseFloat(e), 0) / valuesByFacet[facet].length
+              valuesByFacet.values.push({
+                name: facet,
+                value: avg
               })
             })
-
+            valuesByFacet.values.sort((a,b) => a.value - b.value)
+            // console.log(valuesByFacet.values)
+            this.$data.insights[attr.code].least = valuesByFacet.values[0]
+            this.$data.insights[attr.code].most = valuesByFacet.values[valuesByFacet.values.length-1]
           })
-          this.$data.insights.top.forEach((value) => {
-            var highest = { value: 0}
-            this.attributes.forEach((attr) => {
-              // console.log(this.$data.insights.topValues)
-              var tmp = this.$data.insights.topValues[value][attr.code].reduce((acc, val) => acc + parseFloat(val), 0)
-              tmp /= this.$data.insights.topValues[value][attr.code].length
-              if (tmp >= highest.value) {
-                highest.name = attr.name,
-                highest.value = tmp
-              }
-            })
-            // console.log(value, highest)
-            this.$data.insights.topValues[value].highest = highest
-          })
+          // this.$data.insights.top.forEach((value) => {
+          //   var highest = { value: 0}
+          //   this.attributes.forEach((attr) => {
+          //     // console.log(this.$data.insights.topValues)
+          //     var tmp = this.$data.insights.topValues[value][attr.code].reduce((acc, val) => acc + parseFloat(val), 0)
+          //     tmp /= this.$data.insights.topValues[value][attr.code].length
+          //     if (tmp >= highest.value) {
+          //       highest.name = attr.name,
+          //       highest.value = tmp
+          //     }
+          //   })
+          //   // console.log(value, highest)
+          //   this.$data.insights.topValues[value].highest = highest
+          // })
           console.log(this.$data.insights)
 
           this.loading = false
