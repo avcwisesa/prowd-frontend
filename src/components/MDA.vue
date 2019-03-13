@@ -141,7 +141,7 @@ export default {
       store.dispatch('LANGUAGES'),
       store.dispatch('FETCH_PROFILE_BY_ID', router.params.id)
     ])
-    // console.log(this.attributeCodes)
+    console.log("store", store.state.facets)
     this.postQuery()
   },
   data () {
@@ -213,8 +213,16 @@ export default {
     },
     facets () {
       var facets = this.$store.state.facets
-      this.selectedFacet[1] = this.selectedFacet[1] || facets[1]
-      this.selectedFacet[0] = this.selectedFacet[0] || facets[0]
+      console.log("facet option",this.selectedFacet)
+      if (!this.selectedFacet[0]) {
+        this.selectedFacet[0] = facets[0]
+      }
+      if (!this.selectedFacet[1]) {
+        this.selectedFacet[1] = facets[1]
+      }
+      // console.log(selectedFacet)
+      // console.log(this.selectedFacet[0])
+      // console.log(this.selectedFacet[0])
       return facets
     },
     attributeCodes () {
@@ -419,6 +427,11 @@ export default {
             this.$data.insights[code] = {}
             this.$data.insights[code].values = []
           })
+
+          this.$data.insights.abnormalValues = {
+            high: [],
+            low: []
+          }
           // console.log(this.$data.insights)
 
           this.$data.f1v.forEach((value1) => {
