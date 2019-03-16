@@ -130,7 +130,7 @@
 
         <h2 class="ml-4 my-3">Profile 1</h2>
         <v-layout row align-center justify-space-around>
-          <v-flex class="px-3 mx-5 mt-2" xs3 v-for="(attr, i) in attributes.slice(0,3)" v-bind:key="attr.code">
+          <v-flex class="px-3 mx-5 mt-2" xs3 v-for="attr in attributes" v-bind:key="attr.code">
             <v-layout align-center justify-center column fill-height>
               <v-flex xs12>
                 <h3 class="text-xs-center">{{attr.name}} ({{attr.code}})</h3>
@@ -142,7 +142,7 @@
                   :width="25"
                   :rotate="-90"
                   :value="attr.score"
-                  :color="colors[i]"
+                  :color="getColor(attr.score)"
                 >
                   <h1> {{ (attr.score).toFixed(2) }}% </h1>
                 </v-progress-circular>
@@ -157,7 +157,7 @@
         <v-divider class="my-4"></v-divider>
         <h2 class="ml-4 mb-3">Profile 2</h2>
         <v-layout row align-center justify-space-around>
-          <v-flex class="px-3 mx-5 my-3" xs3 v-for="(attr, i) in attributes2.slice(0,3)" v-bind:key="attr.code">
+          <v-flex class="px-3 mx-5 my-3" xs3 v-for="attr in attributes2" v-bind:key="attr.code">
             <v-layout align-center justify-center column fill-height>
               <v-flex xs12>
                 <h3 class="text-xs-center">{{attr.name}} ({{attr.code}})</h3>
@@ -169,7 +169,7 @@
                   :width="25"
                   :rotate="-90"
                   :value="attr.score"
-                  :color="colors[i]"
+                  :color="getColor(attr.score)"
                 >
                   <h1> {{ (attr.score).toFixed(2) }}% </h1>
                 </v-progress-circular>
@@ -254,14 +254,22 @@ import BarChart from '@/components/BarChart.vue'
 /* eslint-disable */
 
 export default {
-  async fetch ({ store, params }) {
-    await store.dispatch('FETCH_PROFILE_BY_ID', params.id)
-    await store.dispatch('FETCH_FACET_OPTIONS')
-    store.commit('SET_SCORE1', 0)
-    store.commit('SET_SCORE2', 0)
-  },
   components: {
     BarChart
+  },
+  async beforeCreate () {
+    var store = this.$store
+    var router = this.$router.history.current
+    await Promise.all([
+      store.dispatch('LANGUAGES'),
+      store.dispatch('FETCH_PROFILE_BY_ID', router.params.id),
+      store.dispatch('FETCH_FACET_OPTIONS')
+    ])
+    store.commit('SET_SCORE1', 0)
+    store.commit('SET_SCORE2', 0)
+    await this.compareProfile()
+    await this.fillFacets()
+    console.log('done')
   },
   data () {
     return {
@@ -417,8 +425,16 @@ export default {
     }
   },
   methods: {
+    getColor (i) {
+      var red = i < 50 ? 255 : 255 - (255.0 / 100 * ((i - 50) * 2));
+      var green = i < 50 ? 180.0 / 100 * (i * 2) : 180;
+
+      return `rgb(${red},${green},0)`
+    },
     async postQuery (id) {
       this.loading = true
+      console.log(this.attributeVariables)
+      console.log(this.attributes)
       var attributeVarQuery = this.attributeVariables.reduce(function (acc, attr) {
         return acc + ' ?' + attr
       }, '')
@@ -458,7 +474,7 @@ export default {
         }
         LIMIT 20000
       `
-
+      console.log(query)
       return this.$axios.post("https://query.wikidata.org/" + 'sparql?query=' + encodeURIComponent(query))
     },
     fillFacets () {
@@ -551,11 +567,6 @@ export default {
 
       this.warning = (this.entities1.length === 20000 || this.entities2.length === 20000)
     }
-  },
-  mounted: async function () {
-    await this.compareProfile()
-    await this.fillFacets()
-    console.log('done')
   }
 }
 </script>

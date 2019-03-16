@@ -394,7 +394,6 @@ export default {
           SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
         }
       `
-      // console.log(query)
 
       this.$axios.post('https://query.wikidata.org/sparql?query=' + encodeURIComponent(query))
         .then((response) => {
@@ -546,20 +545,7 @@ export default {
             this.$data.insights[attr.code].least = valuesByFacet.values[0]
             this.$data.insights[attr.code].most = valuesByFacet.values[valuesByFacet.values.length-1]
           })
-          // this.$data.insights.top.forEach((value) => {
-          //   var highest = { value: 0}
-          //   this.attributes.forEach((attr) => {
-          //     // console.log(this.$data.insights.topValues)
-          //     var tmp = this.$data.insights.topValues[value][attr.code].reduce((acc, val) => acc + parseFloat(val), 0)
-          //     tmp /= this.$data.insights.topValues[value][attr.code].length
-          //     if (tmp >= highest.value) {
-          //       highest.name = attr.name,
-          //       highest.value = tmp
-          //     }
-          //   })
-          //   // console.log(value, highest)
-          //   this.$data.insights.topValues[value].highest = highest
-          // })
+
           console.log(this.$data.insights)
 
           this.loading = false

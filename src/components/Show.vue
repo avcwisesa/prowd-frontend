@@ -56,7 +56,7 @@
                     :width="25"
                     :rotate="-90"
                     :value="score1"
-                    color=blue
+                    :color="getColor(score1)"
                   >
                     <h1> {{ score1 }}% </h1>
                   </v-progress-circular>
@@ -108,7 +108,7 @@
         <v-card-title class="headline mt-3"> Attribute Completeness Score </v-card-title>
         <v-card-text class="text-xs-left">Degree of completeness for attributes of interest</v-card-text>
         <v-layout row align-center justify-space-around>
-          <v-flex class="px-3 mx-5" xs3 v-for="(attr, i) in attributes" v-bind:key="attr.code">
+          <v-flex class="px-3 mx-5" xs3 v-for="attr in attributes" v-bind:key="attr.code">
             <v-layout align-center justify-center column fill-height>
             <v-flex xs12>
               <h3 class="text-xs-center">{{attr.name}} ({{attr.code}})</h3>
@@ -288,10 +288,10 @@ export default {
   },
   methods: {
     getColor (i) {
-      var red = i < 50 ? 255 : 255 - (256.0 / 100 * ((i - 50) * 2));
-      var green = i < 50 ? 256.0 / 100 * (i * 2) : 255;
+      var red = i < 50 ? 255 : 255 - (255.0 / 100 * ((i - 50) * 2));
+      var green = i < 50 ? 180.0 / 100 * (i * 2) : 180;
 
-      return `rgb(${red},${green},50)`
+      return `rgb(${red},${green},0)`
     },
     postQuery () {
       this.loading = true
