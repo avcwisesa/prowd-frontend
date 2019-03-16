@@ -65,13 +65,6 @@
                   <strong>{{ value }}</strong> ({{amount[value]}})
                 </li>
               </ul>
-              <!--<ul>
-                <li v-for="value in insights.top" :key="value">
-                  <strong>{{ value }}</strong>
-                  's most completed attribute is 
-                  <strong>{{ insights.topValues[value].highest.name }}</strong>
-                </li>
-              </ul>--> 
               <div class="subheading font-weight-medium mt-3">Facet Where Attributes are Most Complete:</div>
               <ul>
                 <li v-for="entry in attributes" :key="entry.code">
@@ -90,23 +83,40 @@
               </ul>
             </v-flex>
             <v-flex xs6>
-              <div class="subheading font-weight-medium">Attributes with Outlier Completeness (<span class="blue--text font-weight-bold">High</span>):</div>
+              <div class="subheading font-weight-medium">Profile Standards:</div>
+              <ul>
+                <li v-for="entry in attributes" :key="entry.code">
+                  <strong>{{ entry.name }}</strong>:
+                    <span v-if="insights[entry.code].lower <= 0">{{ 0 }}</span>
+                    <span v-else>{{ insights[entry.code].lower.toFixed(2) }}</span>
+                  - 
+                    <span v-if="insights[entry.code].upper >= 100">{{ 100 }}</span>
+                    <span v-else>{{ insights[entry.code].upper.toFixed(2) }}</span>
+                  %
+                </li>
+              </ul>
+              <div class="subheading font-weight-medium mt-3" v-if="insights.abnormalValues.high.length">
+                Attributes with Outlier Completeness (<span class="green--text font-weight-bold">High</span>):
+              </div>
               <ul>
                 <li v-for="entry in insights.abnormalValues.high" :key="entry.facet1+entry.facet2">
                   the value of <strong>{{ entry.attr }}</strong> on 
-                  <strong>{{ entry.facet1 }}-{{ entry.facet2 }}</strong>
+                  <strong>{{ entry.facet1 }}-{{ entry.facet2 }}</strong> ({{ entry.value }}%)
                 </li>
               </ul>
-              <div class="subheading font-weight-medium mt-3">Attributes with Outlier Completeness (<span class="red--text font-weight-bold">Low</span>):</div>
+              <div class="subheading font-weight-medium mt-3" v-if="insights.abnormalValues.low.length">
+                Attributes with Outlier Completeness (<span class="red--text font-weight-bold">Low</span>):
+              </div>
               <ul>
                 <li v-for="entry in insights.abnormalValues.low" :key="entry.facet1+entry.facet2">
                   the value of <strong>{{ entry.attr }}</strong> on 
-                  <strong>{{ entry.facet1 }}-{{ entry.facet2 }}</strong>
+                  <strong>{{ entry.facet1 }}-{{ entry.facet2 }}</strong> ({{ entry.value }}%)
                 </li>
               </ul>
             </v-flex>
           </v-layout>
         </v-card-text>
+        {{ insights }}
       </v-card>
     </v-flex>
     <div  v-for="f1value in f1values" v-bind:key=f1value class="mt-3">
@@ -492,15 +502,14 @@ export default {
             var q2 = parseInt(len / 2)
             var q1Value = this.$data.insights[attr.code].values[parseInt(q2 / 2)].value
             var q3Value = this.$data.insights[attr.code].values[parseInt( (len + q2) / 2)].value
-            // console.log(q1Value, q2, q3Value)
+
             var iqr = q3Value - q1Value
-            // console.log(iqr, typeof(iqr))
-            // console.log(q1Value, typeof(q1Value))
-            // console.log(q3Value, typeof(q3Value))
+
             var top = parseFloat(q3Value) + (iqr * 1.5)
             var bottom = parseFloat(q1Value) - (iqr * 1.5)
-            // console.log("top & bottom", top, bottom)
-            // var avg = arr.reduce((acc, e) => acc + parseInt(e.value), 0) / arr.length
+
+            this.$data.insights[attr.code].upper = top
+            this.$data.insights[attr.code].lower = bottom
             var valuesByFacet = {}
             valuesByFacet.values = []
             this.$data.insights[attr.code].values.forEach((entry) => {
@@ -516,7 +525,6 @@ export default {
                   facet2: entry.facet2,
                   value: entry.value
                 })
-                // console.log("Higher than normal", attr.name, entry.facet1, entry.facet2, entry.value, top)
               } else if (entry.value < bottom) {
                 this.$data.insights.abnormalValues.low.push({
                   attr: attr.name,
@@ -524,13 +532,7 @@ export default {
                   facet2: entry.facet2,
                   value: entry.value
                 })
-                // console.log("Lower than normal", attr.name, entry.facet1, entry.facet2, entry.value, bottom)
               }
-              // this.$data.insights.top.forEach((value) => {
-              //   if (entry.facet1 == value) {
-              //     this.$data.insights.topValues[value][attr.code].push(entry.value)
-              //   }
-              // })
             })
             // console.log(valuesByFacet)
             this.$data.f1v.forEach((facet) => {
