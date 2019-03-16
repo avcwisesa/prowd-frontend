@@ -132,7 +132,7 @@
           </v-flex>
         </v-layout>
         <v-card-title class="headline mt-3"> Completeness table </v-card-title>
-        <v-card-text class="text-xs-left">Completeness details of all entities within the profile</v-card-text>
+        <v-card-text class="text-xs-center">Completeness details of all entities within the profile</v-card-text>
         <v-data-table
           :headers="headers"
           :items="entities"
@@ -141,7 +141,7 @@
           disable-initial-sort
         >
           <template slot="items" slot-scope="props">
-            <td v-for="attr in attributeVariables" v-bind:key="attr.code" v-if="props.item[attr]" class="text-xs-right">
+            <td v-for="attr in attributeVariables" v-bind:key="attr.code" v-if="props.item[attr]" class="text-xs-center">
               <div v-if="attr === 'classLabel'">
                 <a v-bind:href="props.item['class'].value">
                   <v-icon>link</v-icon>
@@ -150,11 +150,11 @@
               </div>
               <div v-else><v-icon color="green light">check</v-icon></div>
             </td>
-            <td v-else class="text-xs-right">
+            <td v-else class="text-xs-center">
               <v-icon color="red">close</v-icon>
             </td>
 
-            <td class="text-xs-right">{{ (props.item.score).toFixed(2)+'%' }}</td>
+            <td class="text-xs-center">{{ (props.item.score).toFixed(2)+'%' }}</td>
           </template>
         </v-data-table>
       </v-card>

@@ -198,7 +198,7 @@
                   class="elevation-1"
                 >
                   <template slot="items" slot-scope="props">
-                    <td v-for="attr in attributeVariables" v-bind:key="attr.code" v-if="props.item[attr]" class="text-xs-left">
+                    <td v-for="attr in attributeVariables" v-bind:key="attr.code" v-if="props.item[attr]" class="text-xs-center">
                       <div v-if="attr === 'classLabel'">
                         <a v-bind:href="props.item['class'].value">
                           <v-icon>link</v-icon>
@@ -207,10 +207,10 @@
                       </div>
                       <div v-else><v-icon color="green light">check</v-icon></div>
                     </td>
-                    <td v-else class="text-xs-left">
+                    <td v-else class="text-xs-center">
                       <v-icon color="red">close</v-icon>
                     </td>
-                    <td class="text-xs-left">{{ (props.item.score).toFixed(2)+'%' }}</td>
+                    <td class="text-xs-center">{{ (props.item.score).toFixed(2)+'%' }}</td>
                   </template>
                 </v-data-table>
               </v-card>
@@ -226,7 +226,7 @@
                   class="elevation-1"
                 >
                   <template slot="items" slot-scope="props">
-                    <td v-for="attr in attributeVariables" v-bind:key="attr.code" v-if="props.item[attr]" class="text-xs-left">
+                    <td v-for="attr in attributeVariables" v-bind:key="attr.code" v-if="props.item[attr]" class="text-xs-center">
                       <div v-if="attr === 'classLabel'">
                         <a v-bind:href="props.item['class'].value">
                           <v-icon>link</v-icon>
@@ -235,10 +235,10 @@
                       </div>
                       <div v-else><v-icon color="green light">check</v-icon></div>
                     </td>
-                    <td v-else class="text-xs-left">
+                    <td v-else class="text-xs-center">
                       <v-icon color="red">close</v-icon>
                     </td>
-                    <td class="text-xs-left">{{ (props.item.score).toFixed(2)+'%' }}</td>
+                    <td class="text-xs-center">{{ (props.item.score).toFixed(2)+'%' }}</td>
                   </template>
                 </v-data-table>
               </v-card>
