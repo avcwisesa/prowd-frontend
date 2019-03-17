@@ -180,6 +180,7 @@ export default {
       store.dispatch('FETCH_PROFILE_BY_ID', router.params.id)
     ])
     // console.log("store", store.state.facets)
+    this.$data.dimension = this.facets.length
     this.postQuery()
   },
   data () {
@@ -553,7 +554,6 @@ export default {
       queryLabel = this.facets.reduce((acc, facet) => {
         return acc + ` ?${facet.code}Label`
       }, queryLabel)
-      this.$data.dimension = this.facets.length
       // console.log(queryLabel)
 
       var queryFilter = this.filters.reduce((acc, filter) => {
