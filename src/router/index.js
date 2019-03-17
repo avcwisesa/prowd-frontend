@@ -2,7 +2,6 @@ import Vue from 'vue'
 import Router from 'vue-router'
 
 import About from '@/components/About'
-import Another from '@/components/Another'
 import Browse from '@/components/Browse'
 import Compare from '@/components/Compare'
 import Details from '@/components/Details'
@@ -22,11 +21,6 @@ const router  = new Router({
       path: '/',
       name: 'Index',
       component: Index
-    },
-    {
-      path: '/lol',
-      name: 'Another',
-      component: Another
     },
     {
       path: '/about',
