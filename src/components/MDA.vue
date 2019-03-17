@@ -146,7 +146,15 @@
         </v-card-text>
       </v-card>
     </v-flex>
-    <div  v-for="f1value in f1values" v-bind:key=f1value class="mt-3">
+    <div v-if="dimension == 0" class="mt-3">
+      <v-flex xs12>
+        <v-card class="px-1 pb-1">
+          <v-card-title class="headline">Attribute Completeness Percentage</v-card-title>
+          <canvas id="chart"></canvas>
+        </v-card>
+      </v-flex>
+    </div>
+    <div v-if="dimension != 0" v-for="f1value in f1values" v-bind:key=f1value class="mt-3">
       <v-flex xs12>
         <v-card class="px-1 pb-1">
           <v-card-title class="headline">{{f1value}} ({{amount[f1value]}})</v-card-title>
@@ -259,9 +267,6 @@ export default {
       if (!this.selectedFacet[1]) {
         this.selectedFacet[1] = facets[1]
       }
-      // console.log(selectedFacet)
-      // console.log(this.selectedFacet[0])
-      // console.log(this.selectedFacet[0])
       return facets
     },
     attributeCodes () {
@@ -437,52 +442,87 @@ export default {
 
       return result
     },
+    d0Processing (dataset) {
+      // this.$data.f1v.forEach((value1) => {
+      //   if (typeof dataset[value1] == 'undefined') {
+      //     return
+      //   }
+        var chartData = {
+          labels: this.attributeNames,
+          datasets: []
+        }
+        var data = []
+        var subset = dataset
+        var size = subset.length
+
+        this.attributeCodes.forEach((attribute) => {
+          var sum = subset.reduce((acc, entity) => {
+            var attributeExists = entity[attribute + 'Label'] || 'none'
+            if (attributeExists == 'none') {
+              return acc
+            } else {
+              return acc + 1
+            }
+          }, 0)
+          var percentage = Number.parseFloat(sum / size * 100).toFixed(2)
+          data.push(percentage)
+        })
+
+        chartData.datasets.push({
+          label: 'Average Completeness',
+          backgroundColor: '#41b883',
+          data: data
+        })
+
+        this.$nextTick(() => {
+          this.createChart("chart", chartData)
+        })
+      // })
+    },
     d1Processing (dataset) {
       this.$data.f1v.forEach((value1) => {
-        // this.$data.f2vv[value1].forEach((value2) => {
-          if (typeof dataset[value1] == 'undefined') {
-            return
-          }
-          var chartData = {
-            labels: this.attributeNames,
-            datasets: []
-          }
-          var data = []
-          var subset = dataset[value1]
-          var size = subset.length
+        if (typeof dataset[value1] == 'undefined') {
+          return
+        }
+        var chartData = {
+          labels: this.attributeNames,
+          datasets: []
+        }
+        var data = []
+        var subset = dataset[value1]
+        var size = subset.length
 
-          if (size == 0) {
-            return
-          }
+        if (size == 0) {
+          return
+        }
 
-          this.attributeCodes.forEach((attribute) => {
-            var sum = subset.reduce((acc, entity) => {
-              var attributeExists = entity[attribute + 'Label'] || 'none'
-              if (attributeExists == 'none') {
-                return acc
-              } else {
-                return acc + 1
-              }
-            }, 0)
-            var percentage = Number.parseFloat(sum / size * 100).toFixed(2)
-            // console.log(value1, value2, attribute, percentage)
-            this.$data.insights[attribute].values.push({
-              facet1: value1,
-              value: percentage
-            })
-            data.push(percentage)
+        this.attributeCodes.forEach((attribute) => {
+          var sum = subset.reduce((acc, entity) => {
+            var attributeExists = entity[attribute + 'Label'] || 'none'
+            if (attributeExists == 'none') {
+              return acc
+            } else {
+              return acc + 1
+            }
+          }, 0)
+          var percentage = Number.parseFloat(sum / size * 100).toFixed(2)
+          // console.log(value1, value2, attribute, percentage)
+          this.$data.insights[attribute].values.push({
+            facet1: value1,
+            value: percentage
           })
+          data.push(percentage)
+        })
 
-          chartData.datasets.push({
-            label: 'Average Completeness',
-            backgroundColor: '#41b883',
-            data: data
-          })
+        chartData.datasets.push({
+          label: 'Average Completeness',
+          backgroundColor: '#41b883',
+          data: data
+        })
 
-          this.$nextTick(() => {
-            this.createChart(value1, chartData)
-          })
-        // })
+        this.$nextTick(() => {
+          this.createChart(value1, chartData)
+        })
       })
     },
     d2Processing (dataset) {
@@ -592,7 +632,7 @@ export default {
             entity.score = (exist / 5) * 100
           })
 
-          var dataset = null
+          var dataset = entities
           if (this.$data.dimension == 2) {
             console.log("2!!")
             dataset = this.d2filter( this.$data.selectedFacet[0],
@@ -630,64 +670,68 @@ export default {
             this.d2Processing(dataset)
           } else if (this.$data.dimension == 1) {
             this.d1Processing(dataset)
+          } else {
+            this.d0Processing(dataset)
           }
 
-          this.attributes.forEach((attr) => {
-            this.$data.insights[attr.code].values.sort((a,b) => a.value - b.value)
-            var len = this.$data.insights[attr.code].values.length
-            var q2 = parseInt(len / 2)
-            var q1Value = this.$data.insights[attr.code].values[parseInt(q2 / 2)].value
-            var q3Value = this.$data.insights[attr.code].values[parseInt( (len + q2) / 2)].value
+          if (this.$data.dimension != 0) {
+              this.attributes.forEach((attr) => {
+              this.$data.insights[attr.code].values.sort((a,b) => a.value - b.value)
+              var len = this.$data.insights[attr.code].values.length
+              var q2 = parseInt(len / 2)
+              var q1Value = this.$data.insights[attr.code].values[parseInt(q2 / 2)].value
+              var q3Value = this.$data.insights[attr.code].values[parseInt( (len + q2) / 2)].value
 
-            var iqr = q3Value - q1Value
-            console.log(attr.name)
-            console.log()
-            console.log(q1Value, q3Value, iqr)
+              var iqr = q3Value - q1Value
+              console.log(attr.name)
+              console.log()
+              console.log(q1Value, q3Value, iqr)
 
-            var top = parseFloat(q3Value) + (iqr * 1.5)
-            var bottom = parseFloat(q1Value) - (iqr * 1.5)
+              var top = parseFloat(q3Value) + (iqr * 1.5)
+              var bottom = parseFloat(q1Value) - (iqr * 1.5)
 
-            this.$data.insights[attr.code].upper = top
-            this.$data.insights[attr.code].lower = bottom
-            var valuesByFacet = {}
-            valuesByFacet.values = []
-            this.$data.insights[attr.code].values.forEach((entry) => {
-              if (!valuesByFacet[entry.facet1]) {
-                 valuesByFacet[entry.facet1] = []
-              }
-              valuesByFacet[entry.facet1].push(entry.value)
+              this.$data.insights[attr.code].upper = top
+              this.$data.insights[attr.code].lower = bottom
+              var valuesByFacet = {}
+              valuesByFacet.values = []
+              this.$data.insights[attr.code].values.forEach((entry) => {
+                if (!valuesByFacet[entry.facet1]) {
+                  valuesByFacet[entry.facet1] = []
+                }
+                valuesByFacet[entry.facet1].push(entry.value)
 
-              if (entry.value > top) {
-                this.$data.insights.abnormalValues.high.push({
-                  attr: attr.name,
-                  facet1: entry.facet1,
-                  facet2: entry.facet2,
-                  value: entry.value
-                })
-              } else if (entry.value < bottom) {
-                this.$data.insights.abnormalValues.low.push({
-                  attr: attr.name,
-                  facet1: entry.facet1,
-                  facet2: entry.facet2,
-                  value: entry.value
-                })
-              }
-            })
-            // console.log(valuesByFacet)
-            this.$data.f1v.forEach((facet) => {
-              var avg = valuesByFacet[facet].reduce((acc, e) => acc + parseFloat(e), 0) / valuesByFacet[facet].length
-              valuesByFacet.values.push({
-                name: facet,
-                value: avg
+                if (entry.value > top) {
+                  this.$data.insights.abnormalValues.high.push({
+                    attr: attr.name,
+                    facet1: entry.facet1,
+                    facet2: entry.facet2,
+                    value: entry.value
+                  })
+                } else if (entry.value < bottom) {
+                  this.$data.insights.abnormalValues.low.push({
+                    attr: attr.name,
+                    facet1: entry.facet1,
+                    facet2: entry.facet2,
+                    value: entry.value
+                  })
+                }
               })
+              // console.log(valuesByFacet)
+              this.$data.f1v.forEach((facet) => {
+                var avg = valuesByFacet[facet].reduce((acc, e) => acc + parseFloat(e), 0) / valuesByFacet[facet].length
+                valuesByFacet.values.push({
+                  name: facet,
+                  value: avg
+                })
+              })
+              valuesByFacet.values.sort((a,b) => a.value - b.value)
+              // console.log(valuesByFacet.values)
+              this.$data.insights[attr.code].least = valuesByFacet.values[0]
+              this.$data.insights[attr.code].most = valuesByFacet.values[valuesByFacet.values.length-1]
             })
-            valuesByFacet.values.sort((a,b) => a.value - b.value)
-            // console.log(valuesByFacet.values)
-            this.$data.insights[attr.code].least = valuesByFacet.values[0]
-            this.$data.insights[attr.code].most = valuesByFacet.values[valuesByFacet.values.length-1]
-          })
 
-          console.log(this.$data.insights)
+            console.log(this.$data.insights)
+          }
 
           this.loading = false
         })
