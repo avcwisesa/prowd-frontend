@@ -47,6 +47,8 @@
 
     <v-btn round color="primary" @click="postQuery()">Post Query</v-btn>
     <v-progress-circular v-if="loading" :width="3" :size="50" indeterminate color="green"></v-progress-circular>
+
+    <!-- Automatic Insights -->
     <v-flex v-if="!loading" xs12>
       <v-card class="mt-3 pb-1">
         <v-card-title class="headline">Insights</v-card-title>
@@ -116,7 +118,6 @@
             </v-flex>
           </v-layout>
         </v-card-text>
-        {{ insights }}
       </v-card>
     </v-flex>
     <div  v-for="f1value in f1values" v-bind:key=f1value class="mt-3">
