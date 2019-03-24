@@ -154,22 +154,24 @@
         </v-card>
       </v-flex>
     </div>
-    <div v-if="dimension != 0" v-for="f1value in f1values" v-bind:key=f1value class="mt-3">
-      <v-flex xs12>
-        <v-card class="px-1 pb-1">
-          <v-card-title class="headline">{{f1value}} ({{amount[f1value]}})</v-card-title>
-          <canvas v-if="dimension == 1" :id="f1value"></canvas>
-          <v-layout row align-content-center class="horiz-scroll">
-            <v-flex xs4 v-for="f2value in f2vv[f1value]" v-bind:key="f2value">
-              <div class="pos-relative">
-                <v-card-title class="headline">{{f2value}} </v-card-title>
-                <v-card-text :id="f1value + f2value + 'amount'"></v-card-text>
-                <canvas :id="f1value + f2value"></canvas>
-              </div>
-            </v-flex>
-          </v-layout>
-        </v-card>
-      </v-flex>
+    <div v-if="dimension != 0">
+      <div v-for="f1value in f1values" v-bind:key=f1value class="mt-3">
+        <v-flex xs12>
+          <v-card class="px-1 pb-1">
+            <v-card-title class="headline">{{f1value}} ({{amount[f1value]}})</v-card-title>
+            <canvas v-if="dimension == 1" :id="f1value"></canvas>
+            <v-layout row align-content-center class="horiz-scroll">
+              <v-flex xs4 v-for="f2value in f2vv[f1value]" v-bind:key="f2value">
+                <div class="pos-relative">
+                  <v-card-title class="headline">{{f2value}} </v-card-title>
+                  <v-card-text :id="f1value + f2value + 'amount'"></v-card-text>
+                  <canvas :id="f1value + f2value"></canvas>
+                </div>
+              </v-flex>
+            </v-layout>
+          </v-card>
+        </v-flex>
+      </div>
     </div>
   </v-container>
 </template>
@@ -187,8 +189,12 @@ export default {
       store.dispatch('LANGUAGES'),
       store.dispatch('FETCH_PROFILE_BY_ID', router.params.id)
     ])
-    // console.log("store", store.state.facets)
     this.$data.dimension = this.facets.length
+    for (var i = 0; i < this.$data.dimension; i++) {
+      if (!this.selectedFacet[i]) {
+        this.selectedFacet[i] = this.facets[i]
+      }
+    }
     this.postQuery()
   },
   data () {
@@ -260,13 +266,6 @@ export default {
     },
     facets () {
       var facets = this.$store.state.facets
-      // console.log("facet option",this.selectedFacet)
-      if (!this.selectedFacet[0]) {
-        this.selectedFacet[0] = facets[0]
-      }
-      if (!this.selectedFacet[1]) {
-        this.selectedFacet[1] = facets[1]
-      }
       return facets
     },
     attributeCodes () {
