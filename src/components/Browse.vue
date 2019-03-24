@@ -1,37 +1,52 @@
 <template>
-  <v-layout row wrap>
-    <v-flex v-for="profile in profiles" v-bind:key="profile.ID" xs12 sm8 md6>
-      <v-card class="mx-1">
-        <v-card-title class="headline">{{profile.name}}</v-card-title>
-        <v-card-actions class="mb-2">
-             <v-btn round
-                    @click="goTo(profile.ID)"
-                    class="grey--text text--lighten-4"
-                    color="primary">SEE PROFILE</v-btn>
-             <v-btn round
-                    @click="compare(profile.ID)"
-                    class="grey--text text--lighten-4"
-                    color="blue">COMPARE</v-btn>
-            <v-btn round
-                    @click="mda(profile.ID)"
-                    class="grey--text text--lighten-4"
-                    color="accent">MDA</v-btn>
-             <v-btn round
-                    @click="details(profile.ID)"
-                    class="grey--text text--lighten-4"
-                    color="brown">EDIT</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-flex>
-    <v-flex v-if="profiles.length == 0" xs12 sm8 md6>
-      <v-card >
-        <v-card-text>There are no existing profile. Click below to create a new one</v-card-text>
-        <v-card-actions>
-             <v-btn round @click="goToCreate()" color="green">CREATE NEW PROFILE</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-flex>
-  </v-layout>
+  <v-container fluid>
+     <v-data-table
+        :headers="headers"
+        :items="profiles"
+        class="elevation-1"
+      >
+        <template slot="items" slot-scope="props">
+          <td>{{ props.item.name }}</td>
+          <td class="text-xs-right"> anonymous </td>
+          <td class="text-xs-right">{{ props.item.CreatedAt }}</td>
+          <td class="text-xs-right">{{ props.item.UpdatedAt }}</td>
+          <td class="text-xs-right">
+            <v-menu
+              transition="slide-y-transition"
+              bottom
+              open-on-hover
+            >
+              <template slot="activator">
+                <v-btn
+                  class="purple"
+                  color="primary"
+                  dark
+                >
+                  actions <v-icon>expand_more</v-icon>
+                </v-btn>
+              </template>
+              <v-list>
+                <v-list-tile
+                  v-for="(action, i) in items"
+                  :key="i"
+                  @click="action.func(props.item.ID)"
+                  :class="'grey--text text--lighten-4 ' + action.color"
+                >
+                  <v-list-tile-title >
+                    {{ action.title }}
+                  </v-list-tile-title>
+                </v-list-tile>
+              </v-list>
+            </v-menu>
+          </td>
+        </template>
+        <template slot="no-data">
+          <v-alert :value="true" color="orange" icon="warning">
+            There are no existing profile. Click <a @click="goToCreate()">here</a> to create a new one
+          </v-alert>
+        </template>
+      </v-data-table>
+  </v-container>
 </template>
 
 <script>
@@ -46,7 +61,25 @@ export default {
       API_ENDPOINT: 'http://prowd.id:8080',
       facetValue: {},
       query: '',
-      datacollection: null
+      datacollection: null,
+      headers: [
+        {
+          text: 'Profile Title',
+          align: 'left',
+          sortable: false,
+          value: 'name'
+        },
+        { text: 'Created By', value: 'carbs' },
+        { text: 'Created At', value: 'CreatedAt' },
+        { text: 'Last Modified At', value: 'UpdatedAt' },
+        { text: 'Action', sortable: false }
+      ],
+      items: [
+        { title: 'SEE PROFILE', func: this.goTo, color: 'primary'},
+        { title: 'COMPARE', func: this.compare, color: 'blue'},
+        { title: 'MDA', func: this.mda, color: 'accent'},
+        { title: 'EDIT', func: this.details, color: 'brown'}
+      ]
     }
   },
   computed: {
