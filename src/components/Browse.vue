@@ -3,14 +3,15 @@
      <v-data-table
         :headers="headers"
         :items="profiles"
+        :pagination.sync="pagination"
         class="elevation-1"
       >
         <template slot="items" slot-scope="props">
-          <td>{{ props.item.name }}</td>
-          <td class="text-xs-right"> anonymous </td>
-          <td class="text-xs-right">{{ props.item.CreatedAt }}</td>
-          <td class="text-xs-right">{{ props.item.UpdatedAt }}</td>
-          <td class="text-xs-right">
+          <td class="text-xs-left">{{ props.item.name }}</td>
+          <td class="text-xs-left"> anonymous </td>
+          <td>{{ prettyDate(props.item.CreatedAt) }}</td>
+          <td>{{ prettyDate(props.item.UpdatedAt) }}</td>
+          <td>
             <v-menu
               transition="slide-y-transition"
               bottom
@@ -66,20 +67,22 @@ export default {
         {
           text: 'Profile Title',
           align: 'left',
-          sortable: false,
           value: 'name'
         },
         { text: 'Created By', value: 'carbs' },
-        { text: 'Created At', value: 'CreatedAt' },
-        { text: 'Last Modified At', value: 'UpdatedAt' },
-        { text: 'Action', sortable: false }
+        { text: 'Created At', value: 'CreatedAt', align: 'center' },
+        { text: 'Last Modified At', value: 'UpdatedAt', align: 'center' },
+        { text: 'Action', sortable: false, align: 'center' }
       ],
       items: [
         { title: 'SEE PROFILE', func: this.goTo, color: 'primary'},
         { title: 'COMPARE', func: this.compare, color: 'blue'},
         { title: 'MDA', func: this.mda, color: 'accent'},
         { title: 'EDIT', func: this.details, color: 'brown'}
-      ]
+      ],
+      pagination: {
+        rowsPerPage: 10
+      }
     }
   },
   computed: {
@@ -89,6 +92,10 @@ export default {
     }
   },
   methods: {
+    prettyDate (dateStr) {
+      let date = new Date(dateStr)
+      return date.toDateString().slice(4)
+    },
     goTo (ID) {
       this.$router.push({'path': '/profile/' + ID})
     },
