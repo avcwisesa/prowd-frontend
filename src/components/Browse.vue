@@ -16,6 +16,7 @@
               transition="slide-y-transition"
               bottom
               open-on-hover
+              offset-y
             >
               <template slot="activator">
                 <v-btn
@@ -31,7 +32,7 @@
                   v-for="(action, i) in items"
                   :key="i"
                   @click="action.func(props.item.ID)"
-                  :class="'grey--text text--lighten-4 ' + action.color"
+                  :class="action.color+'--text text--darken-1 '"
                 >
                   <v-list-tile-title >
                     {{ action.title }}

@@ -194,7 +194,7 @@
                 <v-data-table
                   :headers="headers"
                   :items="entities1"
-                  hide-actions
+                  :pagination.sync="pagination"
                   class="elevation-1"
                 >
                   <template slot="items" slot-scope="props">
@@ -222,7 +222,7 @@
                 <v-data-table
                   :headers="headers"
                   :items="entities2"
-                  hide-actions
+                  :pagination.sync="pagination"
                   class="elevation-1"
                 >
                   <template slot="items" slot-scope="props">
@@ -273,6 +273,9 @@ export default {
   },
   data () {
     return {
+      pagination: {
+        rowsPerPage: 10
+      },
       query: '',
       warning: false,
       datacollection: null,

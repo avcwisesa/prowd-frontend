@@ -136,9 +136,8 @@
         <v-data-table
           :headers="headers"
           :items="entities"
-          hide-actions
           class="elevation-1"
-          disable-initial-sort
+          :pagination.sync="pagination"
         >
           <template slot="items" slot-scope="props">
             <td v-for="attr in attributeVariables" v-bind:key="attr.code" v-if="props.item[attr]" class="text-xs-center">
@@ -185,6 +184,9 @@ export default {
   },
   data () {
     return {
+      pagination: {
+        rowsPerPage: 10
+      },
       warning: false,
       facetValue: { 'any': 'any' },
       colors: ['red', 'orange', 'yellow'],
