@@ -95,7 +95,7 @@ export default {
   methods: {
     prettyDate (dateStr) {
       let date = new Date(dateStr)
-      return date.toDateString().slice(4)
+      return date.toUTCString()
     },
     goTo (ID) {
       this.$router.push({'path': '/profile/' + ID})
