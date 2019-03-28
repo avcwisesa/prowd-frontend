@@ -8,7 +8,8 @@
       >
         <template slot="items" slot-scope="props">
           <td class="text-xs-left">{{ props.item.name }}</td>
-          <td class="text-xs-left"> anonymous </td>
+          <td class="text-xs-left" v-if="props.item.author == ''"> anonymous </td>
+          <td class="text-xs-left" v-else> {{ props.item.author }} </td>
           <td>{{ prettyDate(props.item.CreatedAt) }}</td>
           <td>{{ prettyDate(props.item.UpdatedAt) }}</td>
           <td>
@@ -70,7 +71,7 @@ export default {
           align: 'left',
           value: 'name'
         },
-        { text: 'Created By', value: 'carbs' },
+        { text: 'Created By', value: 'author' },
         { text: 'Created At', value: 'CreatedAt', align: 'center' },
         { text: 'Last Modified At', value: 'UpdatedAt', align: 'center' },
         { text: 'Action', sortable: false, align: 'center' }
