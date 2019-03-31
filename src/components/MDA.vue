@@ -70,6 +70,7 @@
       label="Include 'none' in facet value"
       v-model="enableNone"
     ></v-switch>
+    {{ insights }}
     <v-btn round color="primary" @click="postQuery()">Post Query</v-btn>
     <v-progress-circular v-if="loading" :width="3" :size="50" indeterminate color="green"></v-progress-circular>
 
@@ -98,7 +99,7 @@
                 <v-tooltip top>
                   <v-icon slot="activator">info</v-icon>
                   <span>
-                    The average completeness for <strong>{{ entry.attr }}</strong> is 
+                    The average completeness for <strong>{{ entry.name }}</strong> is 
                     <strong>
                       {{ insights[entry.code].avg.toFixed(2) }}%
                     </strong>
@@ -125,7 +126,7 @@
                   the value of <strong>{{ entry.attr }}</strong> on 
                   <strong>{{ entry.facet1 }}-{{ entry.facet2 }}</strong> ({{ entry.value }}%)
                   <v-tooltip top>
-                    <v-icon slot="activator">help</v-icon>
+                    <v-icon slot="activator">info</v-icon>
                     <span>
                       The upper bound value for <strong>{{ entry.attr }}</strong> is 
                       <strong>
@@ -144,7 +145,7 @@
                   the value of <strong>{{ entry.attr }}</strong> on 
                   <strong>{{ entry.facet1 }}-{{ entry.facet2 }}</strong> ({{ entry.value }}%)
                   <v-tooltip top>
-                    <v-icon slot="activator">help</v-icon>
+                    <v-icon slot="activator">info</v-icon>
                     <span>
                       The lower bound value for <strong>{{ entry.attr }}</strong> is 
                       <strong>
@@ -366,6 +367,9 @@ export default {
       sort_key1 = sort_key1.slice(0, topf1)
       this.$data.f1v = sort_key1.map(e => e.key)
 
+      this.$data.insights.top = this.$data.f1v.slice(0, 3)
+      this.$data.insights.bottom = this.$data.f1v.slice(-3).reverse()
+
       return result
     },
     d2filter (f1, f2, topf1, topf2, entities) {
@@ -416,6 +420,7 @@ export default {
       }
 
       this.$data.f2vv = {}
+      var tmp = []
       f1s.forEach((key1) => {
         var sort_key2 = []
         var amt = 0
@@ -433,10 +438,24 @@ export default {
           if(key2.amt) {
             amt += key2.amt
           }
+          tmp.push({
+            'key': key1 + "-" + key2.key,
+            'amt': key2.amt || 0
+          })
+          this.$data.amount[key1 + "-" + key2.key] = key2.amt || 0
         })
         result_amount[key1] = amt
         this.$data.f2vv[key1] = sort_key2.map(e => e.key)
       })
+
+      tmp = tmp.sort(
+                (a, b) => b.amt - a.amt 
+              ).map(
+                e => e.key
+              )
+
+      this.$data.insights.top = tmp.slice(0, 3)
+      this.$data.insights.bottom = tmp.slice(-3).reverse()
 
       var sort_key1 = []
       f1s.forEach((key1) => {
@@ -528,6 +547,8 @@ export default {
           data.push(percentage)
         })
 
+        this.$data.insights[attribute].values.sort()
+
         chartData.datasets.push({
           label: 'Average Completeness',
           backgroundColor: '#41b883',
@@ -585,8 +606,10 @@ export default {
 
           this.$nextTick(() => {
             const ctx = document.getElementById(value1 + value2 + 'amount')
-            ctx.innerText = this.defaultAmountText + size
-            this.createChart(value1 + value2, chartData)
+            if (ctx) {
+              ctx.innerText = this.defaultAmountText + size
+              this.createChart(value1 + value2, chartData)
+            }
           })
         })
       })
@@ -661,8 +684,6 @@ export default {
                                 entities)
           }
 
-          this.$data.insights.top = this.$data.f1v.slice(0, 3)
-          this.$data.insights.bottom = this.$data.f1v.slice(-3).reverse()
           this.$data.insights.topValues = {}
           this.$data.insights.top.forEach((value) => {
             this.$data.insights.topValues[value] = {}
@@ -697,9 +718,6 @@ export default {
               var q3Value = this.$data.insights[attr.code].values[parseInt( (len + q2) / 2)].value
 
               var iqr = q3Value - q1Value
-              // console.log(attr.name)
-              // console.log()
-              // console.log(q1Value, q3Value, iqr)
 
               var top = parseFloat(q3Value) + (iqr * 1.5)
               var bottom = parseFloat(q1Value) - (iqr * 1.5)
@@ -709,10 +727,13 @@ export default {
               var valuesByFacet = {}
               valuesByFacet.values = []
               this.$data.insights[attr.code].values.forEach((entry) => {
-                if (!valuesByFacet[entry.facet1]) {
-                  valuesByFacet[entry.facet1] = []
+                
+                if (this.$data.dimension == 1) {
+                  if (!valuesByFacet[entry.facet1]) {
+                    valuesByFacet[entry.facet1] = []
+                  }
+                  valuesByFacet[entry.facet1].push(entry.value)
                 }
-                valuesByFacet[entry.facet1].push(entry.value)
 
                 if (entry.value > top) {
                   this.$data.insights.abnormalValues.high.push({
@@ -732,19 +753,28 @@ export default {
                   })
                 }
               })
-              // console.log(valuesByFacet)
-              this.$data.f1v.forEach((facet) => {
-                var avg = valuesByFacet[facet].reduce((acc, e) => acc + parseFloat(e), 0) / valuesByFacet[facet].length
-                valuesByFacet.values.push({
-                  name: facet,
-                  value: avg
+              
+              if (this.$data.dimension == 2) {
+                console.log(this.$data.insights[attr.code])
+                this.$data.insights[attr.code].avg = this.$data.insights[attr.code].values.reduce((acc, e) => acc + parseFloat(e.value), 0) / this.$data.insights[attr.code].values.length
+                this.$data.insights[attr.code].least = this.$data.insights[attr.code][0]
+                this.$data.insights[attr.code].most = this.$data.insights[attr.code][this.$data.insights[attr.code].values.length-1]
+                // console.log(this.$data.insights[attr.code])
+              } else if (this.$data.dimension == 1) {
+                this.$data.f1v.forEach((facet) => {
+                  var avg = valuesByFacet[facet].reduce((acc, e) => acc + parseFloat(e), 0) / valuesByFacet[facet].length
+                  valuesByFacet.values.push({
+                    name: facet,
+                    value: avg
+                  })
                 })
-              })
-              valuesByFacet.values.sort((a,b) => a.value - b.value)
-              // console.log(valuesByFacet.values)
-              this.$data.insights[attr.code].avg = valuesByFacet.values.reduce((acc, e) => acc + parseFloat(e.value), 0) / valuesByFacet.values.length
-              this.$data.insights[attr.code].least = valuesByFacet.values[0]
-              this.$data.insights[attr.code].most = valuesByFacet.values[valuesByFacet.values.length-1]
+                valuesByFacet.values.sort((a,b) => a.value - b.value)
+                // console.log(valuesByFacet.values)
+                this.$data.insights[attr.code].avg = valuesByFacet.values.reduce((acc, e) => acc + parseFloat(e.value), 0) / valuesByFacet.values.length
+                this.$data.insights[attr.code].least = valuesByFacet.values[0]
+                this.$data.insights[attr.code].most = valuesByFacet.values[valuesByFacet.values.length-1]
+              }
+              
             })
 
             // console.log(this.$data.insights)
