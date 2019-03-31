@@ -630,6 +630,123 @@ export default {
         options: this.$data.options,
       })
     },
+    processVisualisation (entities) {
+      entities.forEach((entity) => {
+        var exist = Object.keys(entity).length - 2
+        entity.score = (exist / 5) * 100
+      })
+
+      var dataset = entities
+      if (this.$data.dimension == 2) {
+        // console.log("2!!")
+        dataset = this.d2filter( this.$data.selectedFacet[0],
+                            this.$data.selectedFacet[1],
+                            this.$data.facetLimit[0],
+                            this.$data.facetLimit[1],
+                            entities)
+      } else if (this.$data.dimension == 1) {
+        // console.log("1!!")
+        dataset = this.d1filter( this.$data.selectedFacet[0],
+                            this.$data.facetLimit[0],
+                            entities)
+      }
+
+      this.$data.insights.topValues = {}
+      this.$data.insights.top.forEach((value) => {
+        this.$data.insights.topValues[value] = {}
+        this.attributeCodes.forEach((code) => {
+          this.$data.insights.topValues[value][code] = []
+        })
+      })
+      this.attributeCodes.forEach((code) => {
+        this.$data.insights[code] = {}
+        this.$data.insights[code].values = []
+      })
+
+      this.$data.insights.abnormalValues = {
+        high: [],
+        low: []
+      }
+
+      if (this.$data.dimension == 2) {
+        this.d2Processing(dataset)
+      } else if (this.$data.dimension == 1) {
+        this.d1Processing(dataset)
+      } else {
+        this.d0Processing(dataset)
+      }
+
+      if (this.$data.dimension != 0) {
+          this.attributes.forEach((attr) => {
+          this.$data.insights[attr.code].values.sort((a,b) => a.value - b.value)
+          var len = this.$data.insights[attr.code].values.length
+          var q2 = parseInt(len / 2)
+          var q1Value = this.$data.insights[attr.code].values[parseInt(q2 / 2)].value
+          var q3Value = this.$data.insights[attr.code].values[parseInt( (len + q2) / 2)].value
+
+          var iqr = q3Value - q1Value
+
+          var top = parseFloat(q3Value) + (iqr * 1.5)
+          var bottom = parseFloat(q1Value) - (iqr * 1.5)
+
+          this.$data.insights[attr.code].upper = top
+          this.$data.insights[attr.code].lower = bottom
+          var valuesByFacet = {}
+          valuesByFacet.values = []
+          this.$data.insights[attr.code].values.forEach((entry) => {
+            
+            if (this.$data.dimension == 1) {
+              if (!valuesByFacet[entry.facet1]) {
+                valuesByFacet[entry.facet1] = []
+              }
+              valuesByFacet[entry.facet1].push(entry.value)
+            }
+
+            if (entry.value > top) {
+              this.$data.insights.abnormalValues.high.push({
+                attr: attr.name,
+                code: attr.code,
+                facet1: entry.facet1,
+                facet2: entry.facet2,
+                value: entry.value
+              })
+            } else if (entry.value < bottom) {
+              this.$data.insights.abnormalValues.low.push({
+                attr: attr.name,
+                code: attr.code,
+                facet1: entry.facet1,
+                facet2: entry.facet2,
+                value: entry.value
+              })
+            }
+          })
+          
+          if (this.$data.dimension == 2) {
+            // console.log(this.$data.insights[attr.code])
+            this.$data.insights[attr.code].avg = this.$data.insights[attr.code].values.reduce((acc, e) => acc + parseFloat(e.value), 0) / this.$data.insights[attr.code].values.length
+            this.$data.insights[attr.code].least = this.$data.insights[attr.code].values[0]
+            this.$data.insights[attr.code].most = this.$data.insights[attr.code].values[this.$data.insights[attr.code].values.length-1]
+            // console.log(this.$data.insights[attr.code])
+          } else if (this.$data.dimension == 1) {
+            this.$data.f1v.forEach((facet) => {
+              var avg = valuesByFacet[facet].reduce((acc, e) => acc + parseFloat(e), 0) / valuesByFacet[facet].length
+              valuesByFacet.values.push({
+                name: facet,
+                value: avg
+              })
+            })
+            valuesByFacet.values.sort((a,b) => a.value - b.value)
+            // console.log(valuesByFacet.values)
+            this.$data.insights[attr.code].avg = valuesByFacet.values.reduce((acc, e) => acc + parseFloat(e.value), 0) / valuesByFacet.values.length
+            this.$data.insights[attr.code].least = valuesByFacet.values[0]
+            this.$data.insights[attr.code].most = valuesByFacet.values[valuesByFacet.values.length-1]
+          }
+          
+        })
+
+        // console.log(this.$data.insights)
+      }
+    },
     postQuery () {
       this.loading = true
       var queryLabel = this.attributeCodes.reduce((acc, code) => {
@@ -671,127 +788,21 @@ export default {
           var entities = response.data.results.bindings
           this.$store.commit('SET_ENTITIES1', entities)
 
-          entities.forEach((entity) => {
-            var exist = Object.keys(entity).length - 2
-            entity.score = (exist / 5) * 100
-          })
-
-          var dataset = entities
-          if (this.$data.dimension == 2) {
-            // console.log("2!!")
-            dataset = this.d2filter( this.$data.selectedFacet[0],
-                                this.$data.selectedFacet[1],
-                                this.$data.facetLimit[0],
-                                this.$data.facetLimit[1],
-                                entities)
-          } else if (this.$data.dimension == 1) {
-            // console.log("1!!")
-            dataset = this.d1filter( this.$data.selectedFacet[0],
-                                this.$data.facetLimit[0],
-                                entities)
-          }
-
-          this.$data.insights.topValues = {}
-          this.$data.insights.top.forEach((value) => {
-            this.$data.insights.topValues[value] = {}
-            this.attributeCodes.forEach((code) => {
-              this.$data.insights.topValues[value][code] = []
-            })
-          })
-          this.attributeCodes.forEach((code) => {
-            this.$data.insights[code] = {}
-            this.$data.insights[code].values = []
-          })
-
-          this.$data.insights.abnormalValues = {
-            high: [],
-            low: []
-          }
-
-          if (this.$data.dimension == 2) {
-            this.d2Processing(dataset)
-          } else if (this.$data.dimension == 1) {
-            this.d1Processing(dataset)
-          } else {
-            this.d0Processing(dataset)
-          }
-
-          if (this.$data.dimension != 0) {
-              this.attributes.forEach((attr) => {
-              this.$data.insights[attr.code].values.sort((a,b) => a.value - b.value)
-              var len = this.$data.insights[attr.code].values.length
-              var q2 = parseInt(len / 2)
-              var q1Value = this.$data.insights[attr.code].values[parseInt(q2 / 2)].value
-              var q3Value = this.$data.insights[attr.code].values[parseInt( (len + q2) / 2)].value
-
-              var iqr = q3Value - q1Value
-
-              var top = parseFloat(q3Value) + (iqr * 1.5)
-              var bottom = parseFloat(q1Value) - (iqr * 1.5)
-
-              this.$data.insights[attr.code].upper = top
-              this.$data.insights[attr.code].lower = bottom
-              var valuesByFacet = {}
-              valuesByFacet.values = []
-              this.$data.insights[attr.code].values.forEach((entry) => {
-                
-                if (this.$data.dimension == 1) {
-                  if (!valuesByFacet[entry.facet1]) {
-                    valuesByFacet[entry.facet1] = []
-                  }
-                  valuesByFacet[entry.facet1].push(entry.value)
-                }
-
-                if (entry.value > top) {
-                  this.$data.insights.abnormalValues.high.push({
-                    attr: attr.name,
-                    code: attr.code,
-                    facet1: entry.facet1,
-                    facet2: entry.facet2,
-                    value: entry.value
-                  })
-                } else if (entry.value < bottom) {
-                  this.$data.insights.abnormalValues.low.push({
-                    attr: attr.name,
-                    code: attr.code,
-                    facet1: entry.facet1,
-                    facet2: entry.facet2,
-                    value: entry.value
-                  })
-                }
-              })
-              
-              if (this.$data.dimension == 2) {
-                console.log(this.$data.insights[attr.code])
-                this.$data.insights[attr.code].avg = this.$data.insights[attr.code].values.reduce((acc, e) => acc + parseFloat(e.value), 0) / this.$data.insights[attr.code].values.length
-                this.$data.insights[attr.code].least = this.$data.insights[attr.code].values[0]
-                this.$data.insights[attr.code].most = this.$data.insights[attr.code].values[this.$data.insights[attr.code].values.length-1]
-                // console.log(this.$data.insights[attr.code])
-              } else if (this.$data.dimension == 1) {
-                this.$data.f1v.forEach((facet) => {
-                  var avg = valuesByFacet[facet].reduce((acc, e) => acc + parseFloat(e), 0) / valuesByFacet[facet].length
-                  valuesByFacet.values.push({
-                    name: facet,
-                    value: avg
-                  })
-                })
-                valuesByFacet.values.sort((a,b) => a.value - b.value)
-                // console.log(valuesByFacet.values)
-                this.$data.insights[attr.code].avg = valuesByFacet.values.reduce((acc, e) => acc + parseFloat(e.value), 0) / valuesByFacet.values.length
-                this.$data.insights[attr.code].least = valuesByFacet.values[0]
-                this.$data.insights[attr.code].most = valuesByFacet.values[valuesByFacet.values.length-1]
-              }
-              
-            })
-
-            // console.log(this.$data.insights)
-          }
+          this.processVisualisation(entities)
 
           this.loading = false
         })
         .catch((error) => {
           console.log(error)
         })
+    }
+  },
+  watch: {
+    dimension: function (newDimesion, oldDimension) {
+      this.processVisualisation(this.entities)
+    },
+    selectedFacet: function (newFacets, oldFacets) {
+      this.processVisualisation(this.entities)
     }
   }
 }
