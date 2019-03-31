@@ -174,7 +174,9 @@
       <v-flex xs12>
         <v-card class="px-1 pb-1">
           <v-card-title class="headline">Attribute Completeness Percentage</v-card-title>
-          <canvas id="chart"></canvas>
+          <div class="chart-container">
+            <canvas id="chart"></canvas>
+          </div>
         </v-card>
       </v-flex>
     </div>
@@ -183,7 +185,9 @@
         <v-flex xs12>
           <v-card class="px-1 pb-1">
             <v-card-title class="headline">{{f1value}} ({{amount[f1value]}})</v-card-title>
-            <canvas v-if="dimension == 1" :id="f1value"></canvas>
+            <div v-if="dimension == 1" class="chart-container" >
+              <canvas :id="f1value"></canvas>
+            </div>
             <v-layout v-if="dimension == 2" row align-content-center class="horiz-scroll">
               <v-flex xs4 v-for="f2value in f2vv[f1value]" v-bind:key="f2value">
                 <div class="pos-relative">
@@ -833,5 +837,12 @@ export default {
 .horiz-scroll {
   overflow-y: hidden;
   overflow-x: auto;
+}
+
+.chart-container {
+  position: relative;
+  margin: auto;
+  height: 50vh;
+  width: 56vw;
 }
 </style>
