@@ -47,7 +47,7 @@
       <v-flex xs4>
         <v-select
           v-if="dimension >= 1"
-          v-model="selectRowSorting"
+          v-model="selectSorting[0]"
           :items="sortingOptions"
           item-text="text"
           item-value="value"
@@ -56,7 +56,7 @@
         ></v-select>
         <v-select
           v-if="dimension >= 2"
-          v-model="selectColSorting"
+          v-model="selectSorting[1]"
           :items="sortingOptions"
           item-text="text"
           item-value="value"
@@ -262,8 +262,10 @@ export default {
           },
         },
         facetLimit: [5, 5],
-        selectRowSorting: {text: 'Descending', value: 1},
-        selectColSorting: {text: 'Descending', value: 1},
+        selectSorting: [
+          {text: 'Descending', value: 1},
+          {text: 'Descending', value: 1}
+        ],
         sortingOptions: [
           {text: 'Descending', value: 1},
           {text: 'Ascending', value: -1}
@@ -370,7 +372,7 @@ export default {
       })
 
       sort_key1.sort((a, b) => {
-        return (b.amt - a.amt) * this.$data.selectRowSorting.value
+        return (b.amt - a.amt) * this.$data.selectSorting[0].value
       })
 
       sort_key1 = sort_key1.slice(0, topf1)
@@ -440,7 +442,7 @@ export default {
           })
         })
         sort_key2.sort((a, b) => {
-          return (b.amt - a.amt) * this.$data.selectColSorting.value
+          return (b.amt - a.amt) * this.$data.selectSorting[1].value
         })
         sort_key2 = sort_key2.slice(0, topf2)
         sort_key2.forEach((key2) => {
@@ -448,7 +450,8 @@ export default {
             amt += key2.amt
           }
           tmp.push({
-            'key': key1 + "-" + key2.key,
+            'key1': key1,
+            'key2': key2.key,
             'amt': key2.amt || 0
           })
           this.$data.amount[key1 + "-" + key2.key] = key2.amt || 0
@@ -456,15 +459,6 @@ export default {
         result_amount[key1] = amt
         this.$data.f2vv[key1] = sort_key2.map(e => e.key)
       })
-
-      tmp = tmp.sort(
-                (a, b) => b.amt - a.amt 
-              ).map(
-                e => e.key
-              )
-
-      this.$data.insights.top = tmp.slice(0, 3)
-      this.$data.insights.bottom = tmp.slice(-3).reverse()
 
       var sort_key1 = []
       f1s.forEach((key1) => {
@@ -476,11 +470,18 @@ export default {
       })
 
       sort_key1.sort((a, b) => {
-        return (b.amt - a.amt) * this.$data.selectRowSorting.value
+        return (b.amt - a.amt) * this.$data.selectSorting[0].value
       })
 
       sort_key1 = sort_key1.slice(0, topf1)
       this.$data.f1v = sort_key1.map(e => e.key)
+
+      tmp = tmp.filter(e => this.$data.f1v.includes(e.key1)
+              ).sort((a, b) => b.amt - a.amt 
+              ).map(e => e.key1 + "-" + e.key2)
+
+      this.$data.insights.top = tmp.slice(0, 3)
+      this.$data.insights.bottom = tmp.slice(-3).reverse()
 
       return result
     },
@@ -802,6 +803,15 @@ export default {
       this.processVisualisation(this.entities)
     },
     selectedFacet: function (newFacets, oldFacets) {
+      this.processVisualisation(this.entities)
+    },
+    facetLimit: function (newFacets, oldFacets) {
+      this.processVisualisation(this.entities)
+    },
+    selectSorting: function (newFacets, oldFacets) {
+      this.processVisualisation(this.entities)
+    },
+    enableNone: function (newFacets, oldFacets) {
       this.processVisualisation(this.entities)
     }
   }
