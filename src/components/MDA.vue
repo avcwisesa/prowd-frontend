@@ -70,7 +70,6 @@
       label="Include 'none' in facet value"
       v-model="enableNone"
     ></v-switch>
-    {{ insights }}
     <v-btn round color="primary" @click="postQuery()">Post Query</v-btn>
     <v-progress-circular v-if="loading" :width="3" :size="50" indeterminate color="green"></v-progress-circular>
 
@@ -95,25 +94,35 @@
               </ul>
               <div class="subheading font-weight-medium mt-3">Facet with Extreme Attribute Completeness:</div>
               <div v-for="entry in attributes" :key="entry.code">
-                <strong>{{ entry.name }} </strong>
+                <strong v-if="entry">{{ entry.name }} </strong>
                 <v-tooltip top>
                   <v-icon slot="activator">info</v-icon>
-                  <span>
+                  <span v-if="entry">
                     The average completeness for <strong>{{ entry.name }}</strong> is 
-                    <strong>
-                      {{ insights[entry.code].avg.toFixed(2) }}%
+                    <strong v-if="insights[entry.code]">
+                      {{ insights[entry.code].avg }}%
                     </strong>
                   </span>
                 </v-tooltip>
                 <ul>
-                  <li>
+                  <li v-if="dimension == 1">
                     Most complete on <strong>{{ insights[entry.code].most.name }}</strong>
                     ({{ insights[entry.code].most.value.toFixed(2) }}%)
                   </li>
-                  <li>
+                  <li v-else>
+                    Most complete on <strong>{{ insights[entry.code].most.facet1 + "-" + insights[entry.code].most.facet2 }}</strong>
+                    ({{ insights[entry.code].most.value }}%)
+                  </li>
+
+                  <li v-if="dimension == 1">
                     Least complete on <strong>{{ insights[entry.code].least.name }}</strong>
                     ({{ insights[entry.code].least.value.toFixed(2) }}%)
                   </li>
+                  <li v-else>
+                    Least complete on <strong>{{ insights[entry.code].least.facet1 + "-" + insights[entry.code].least.facet2 }}</strong>
+                    ({{ insights[entry.code].least.value }}%)
+                  </li>
+
                 </ul>
               </div>
             </v-flex>
@@ -175,7 +184,7 @@
           <v-card class="px-1 pb-1">
             <v-card-title class="headline">{{f1value}} ({{amount[f1value]}})</v-card-title>
             <canvas v-if="dimension == 1" :id="f1value"></canvas>
-            <v-layout row align-content-center class="horiz-scroll">
+            <v-layout v-if="dimension == 2" row align-content-center class="horiz-scroll">
               <v-flex xs4 v-for="f2value in f2vv[f1value]" v-bind:key="f2value">
                 <div class="pos-relative">
                   <v-card-title class="headline">{{f2value}} </v-card-title>
@@ -547,8 +556,6 @@ export default {
           data.push(percentage)
         })
 
-        this.$data.insights[attribute].values.sort()
-
         chartData.datasets.push({
           label: 'Average Completeness',
           backgroundColor: '#41b883',
@@ -757,8 +764,8 @@ export default {
               if (this.$data.dimension == 2) {
                 console.log(this.$data.insights[attr.code])
                 this.$data.insights[attr.code].avg = this.$data.insights[attr.code].values.reduce((acc, e) => acc + parseFloat(e.value), 0) / this.$data.insights[attr.code].values.length
-                this.$data.insights[attr.code].least = this.$data.insights[attr.code][0]
-                this.$data.insights[attr.code].most = this.$data.insights[attr.code][this.$data.insights[attr.code].values.length-1]
+                this.$data.insights[attr.code].least = this.$data.insights[attr.code].values[0]
+                this.$data.insights[attr.code].most = this.$data.insights[attr.code].values[this.$data.insights[attr.code].values.length-1]
                 // console.log(this.$data.insights[attr.code])
               } else if (this.$data.dimension == 1) {
                 this.$data.f1v.forEach((facet) => {
