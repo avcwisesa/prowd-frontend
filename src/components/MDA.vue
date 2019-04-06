@@ -19,7 +19,7 @@
       <v-flex xs2 class="ml-3">
         <v-slider
           v-model="dimension"
-          :max="2"
+          :max="Math.min(facets.length, 2)"
           :min="0"
           :step="1"
         ></v-slider>
@@ -98,9 +98,9 @@
                 <v-tooltip top>
                   <v-icon slot="activator">info</v-icon>
                   <span v-if="entry">
-                    The average completeness for <strong>{{ entry.name }}</strong> is 
+                    The average completeness for <strong>{{ entry.name }}</strong> is
                     <strong v-if="insights[entry.code]">
-                      {{ insights[entry.code].avg }}%
+                      {{ insights[entry.code].avg.toFixed(2) }}%
                     </strong>
                   </span>
                 </v-tooltip>
@@ -132,12 +132,14 @@
               </div>
               <ul>
                 <li v-for="entry in insights.abnormalValues.high" :key="entry.facet1+entry.facet2">
-                  the value of <strong>{{ entry.attr }}</strong> on 
-                  <strong>{{ entry.facet1 }}-{{ entry.facet2 }}</strong> ({{ entry.value }}%)
+                  the value of <strong>{{ entry.attr }}</strong> on
+                  <strong v-if="entry.facet2">{{ entry.facet1 }}-{{ entry.facet2 }}</strong>
+                  <strong v-else>{{ entry.facet1 }}</strong>
+                  ({{ entry.value }}%)
                   <v-tooltip top>
                     <v-icon slot="activator">info</v-icon>
                     <span>
-                      The upper bound value for <strong>{{ entry.attr }}</strong> is 
+                      The upper bound value for <strong>{{ entry.attr }}</strong> is
                       <strong>
                         <span v-if="insights[entry.code].upper >= 100">{{ 100 }}%</span>
                         <span v-else>{{ insights[entry.code].upper.toFixed(2) }}%</span>
@@ -151,12 +153,14 @@
               </div>
               <ul>
                 <li v-for="entry in insights.abnormalValues.low" :key="entry.facet1+entry.facet2">
-                  the value of <strong>{{ entry.attr }}</strong> on 
-                  <strong>{{ entry.facet1 }}-{{ entry.facet2 }}</strong> ({{ entry.value }}%)
+                  the value of <strong>{{ entry.attr }}</strong> on
+                  <strong v-if="entry.facet2">{{ entry.facet1 }}-{{ entry.facet2 }}</strong>
+                  <strong v-else>{{ entry.facet1 }}</strong>
+                  ({{ entry.value }}%)
                   <v-tooltip top>
                     <v-icon slot="activator">info</v-icon>
                     <span>
-                      The lower bound value for <strong>{{ entry.attr }}</strong> is 
+                      The lower bound value for <strong>{{ entry.attr }}</strong> is
                       <strong>
                         <span v-if="insights[entry.code].lower <= 0">{{ 0 }}%</span>
                         <span v-else>{{ insights[entry.code].lower.toFixed(2) }}%</span>
@@ -699,7 +703,7 @@ export default {
           var valuesByFacet = {}
           valuesByFacet.values = []
           this.$data.insights[attr.code].values.forEach((entry) => {
-            
+
             if (this.$data.dimension == 1) {
               if (!valuesByFacet[entry.facet1]) {
                 valuesByFacet[entry.facet1] = []
@@ -725,7 +729,7 @@ export default {
               })
             }
           })
-          
+
           if (this.$data.dimension == 2) {
             // console.log(this.$data.insights[attr.code])
             this.$data.insights[attr.code].avg = this.$data.insights[attr.code].values.reduce((acc, e) => acc + parseFloat(e.value), 0) / this.$data.insights[attr.code].values.length
@@ -842,7 +846,7 @@ export default {
 .chart-container {
   position: relative;
   margin: auto;
-  height: 50vh;
-  width: 56vw;
+  height: 50        vh;
+  width: 49vw;
 }
 </style>
