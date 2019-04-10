@@ -127,16 +127,24 @@
               </div>
             </v-flex>
             <v-flex xs6>
-              <div class="subheading font-weight-medium" v-if="insights.completenessScore.length">
+              <div class="subheading font-weight-medium" v-if="insights.completenessScore.high.length">
                 Facets with highest overall attribute completeness:
               </div>
               <ul>
-                <li v-for="entry in insights.completenessScore" :key="entry.name">
+                <li v-for="entry in insights.completenessScore.high" :key="entry.name">
                   <strong>{{ entry.name }}</strong>
                   ({{entry.score.toFixed(2)}}% with {{ amount[entry.name] }} entities)
                 </li>
               </ul>
-
+              <div class="subheading font-weight-medium mt-3" v-if="insights.completenessScore.low.length">
+                Facets with lowest overall attribute completeness:
+              </div>
+              <ul>
+                <li v-for="entry in insights.completenessScore.low" :key="entry.name">
+                  <strong>{{ entry.name }}</strong>
+                  ({{entry.score.toFixed(2)}}% with {{ amount[entry.name] }} entities)
+                </li>
+              </ul>
               <div class="subheading font-weight-medium mt-3" v-if="insights.abnormalValues.high.length">
                 Attributes with Outlier Completeness (<span class="green--text font-weight-bold">High</span>):
               </div>
@@ -600,7 +608,8 @@ export default {
 
       this.$data.insights.completenessScore.sort((a,b) => b.score - a.score)
 
-      this.$data.insights.completenessScore = this.$data.insights.completenessScore.slice(0, 3)
+      this.$data.insights.completenessScore.high = this.$data.insights.completenessScore.slice(0, 3)
+      this.$data.insights.completenessScore.low = this.$data.insights.completenessScore.slice(-3).reverse()
     },
     d2Processing (dataset) {
       this.$data.insights.completenessScore = []
@@ -673,7 +682,8 @@ export default {
 
       this.$data.insights.completenessScore.sort((a,b) => b.score - a.score)
 
-      this.$data.insights.completenessScore = this.$data.insights.completenessScore.slice(0, 3)
+      this.$data.insights.completenessScore.high = this.$data.insights.completenessScore.slice(0, 3)
+      this.$data.insights.completenessScore.low = this.$data.insights.completenessScore.slice(-3).reverse()
     },
     createChart (chartId, chartData) {
       // console.log(chartData)
