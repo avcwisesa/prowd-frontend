@@ -132,7 +132,7 @@
               </div>
               <ul>
                 <li v-for="entry in insights.abnormalValues.high" :key="entry.facet1+entry.facet2">
-                  the value of <strong>{{ entry.attr }}</strong> on
+                  <strong>{{ entry.attr }}</strong> on
                   <strong v-if="entry.facet2">{{ entry.facet1 }}-{{ entry.facet2 }}</strong>
                   <strong v-else>{{ entry.facet1 }}</strong>
                   ({{ entry.value }}%)
@@ -153,7 +153,7 @@
               </div>
               <ul>
                 <li v-for="entry in insights.abnormalValues.low" :key="entry.facet1+entry.facet2">
-                  the value of <strong>{{ entry.attr }}</strong> on
+                  <strong>{{ entry.attr }}</strong> on
                   <strong v-if="entry.facet2">{{ entry.facet1 }}-{{ entry.facet2 }}</strong>
                   <strong v-else>{{ entry.facet1 }}</strong>
                   ({{ entry.value }}%)
