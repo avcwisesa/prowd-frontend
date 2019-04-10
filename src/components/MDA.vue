@@ -127,6 +127,16 @@
               </div>
             </v-flex>
             <v-flex xs6>
+              <div class="subheading font-weight-medium" v-if="insights.completenessScore.length">
+                Facets with highest overall attribute completeness:
+              </div>
+              <ul>
+                <li v-for="entry in insights.completenessScore" :key="entry.name">
+                  <strong>{{ entry.name }}</strong>
+                  ({{entry.score.toFixed(2)}}% with {{ amount[entry.name] }} entities)
+                </li>
+              </ul>
+
               <div class="subheading font-weight-medium mt-3" v-if="insights.abnormalValues.high.length">
                 Attributes with Outlier Completeness (<span class="green--text font-weight-bold">High</span>):
               </div>
@@ -485,7 +495,7 @@ export default {
       this.$data.f1v = sort_key1.map(e => e.key)
 
       tmp = tmp.filter(e => this.$data.f1v.includes(e.key1)
-              ).sort((a, b) => b.amt - a.amt 
+              ).sort((a, b) => b.amt - a.amt
               ).map(e => e.key1 + "-" + e.key2)
 
       this.$data.insights.top = tmp.slice(0, 3)
@@ -531,6 +541,8 @@ export default {
       // })
     },
     d1Processing (dataset) {
+      this.$data.insights.completenessScore = []
+
       this.$data.f1v.forEach((value1) => {
         if (typeof dataset[value1] == 'undefined') {
           return
@@ -539,6 +551,8 @@ export default {
           labels: this.attributeNames,
           datasets: []
         }
+
+        var completenessScore = 0
         var data = []
         var subset = dataset[value1]
         var size = subset.length
@@ -556,13 +570,21 @@ export default {
               return acc + 1
             }
           }, 0)
-          var percentage = Number.parseFloat(sum / size * 100).toFixed(2)
+          var percentage = Number.parseFloat(sum / size * 100)
           // console.log(value1, value2, attribute, percentage)
           this.$data.insights[attribute].values.push({
             facet1: value1,
-            value: percentage
+            value: percentage.toFixed(2)
           })
-          data.push(percentage)
+          data.push(percentage.toFixed(2))
+          completenessScore += percentage
+        })
+
+        completenessScore /= this.attributeCodes.length
+
+        this.$data.insights.completenessScore.push({
+          name: value1,
+          score: completenessScore
         })
 
         chartData.datasets.push({
@@ -575,8 +597,14 @@ export default {
           this.createChart(value1, chartData)
         })
       })
+
+      this.$data.insights.completenessScore.sort((a,b) => b.score - a.score)
+
+      this.$data.insights.completenessScore = this.$data.insights.completenessScore.slice(0, 3)
     },
     d2Processing (dataset) {
+      this.$data.insights.completenessScore = []
+
       this.$data.f1v.forEach((value1) => {
 
         this.$data.f2vv[value1].forEach((value2) => {
@@ -587,9 +615,13 @@ export default {
             labels: this.attributeNames,
             datasets: []
           }
+
+          var completenessScore = 0
           var data = []
           var subset = dataset[value1][value2]
           var size = subset.length
+
+          this.$data.amount[value1 + "-" + value2] = size
 
           if (size == 0) {
             return
@@ -604,14 +636,23 @@ export default {
                 return acc + 1
               }
             }, 0)
-            var percentage = Number.parseFloat(sum / size * 100).toFixed(2)
-            // console.log(value1, value2, attribute, percentage)
+            var percentage = Number.parseFloat(sum / size * 100)
+
+            completenessScore += percentage
+
             this.$data.insights[attribute].values.push({
               facet1: value1,
               facet2: value2,
-              value: percentage
+              value: percentage.toFixed(2)
             })
-            data.push(percentage)
+            data.push(percentage.toFixed(2))
+          })
+
+          completenessScore /= this.attributeCodes.length
+
+          this.$data.insights.completenessScore.push({
+            name: value1 + "-" + value2,
+            score: completenessScore
           })
 
           chartData.datasets.push({
@@ -629,6 +670,10 @@ export default {
           })
         })
       })
+
+      this.$data.insights.completenessScore.sort((a,b) => b.score - a.score)
+
+      this.$data.insights.completenessScore = this.$data.insights.completenessScore.slice(0, 3)
     },
     createChart (chartId, chartData) {
       // console.log(chartData)
@@ -730,6 +775,8 @@ export default {
             }
           })
 
+          this.$data.insights[attr.code].values.sort((a,b) => a.value - b.value)
+
           if (this.$data.dimension == 2) {
             // console.log(this.$data.insights[attr.code])
             this.$data.insights[attr.code].avg = this.$data.insights[attr.code].values.reduce((acc, e) => acc + parseFloat(e.value), 0) / this.$data.insights[attr.code].values.length
@@ -750,7 +797,7 @@ export default {
             this.$data.insights[attr.code].least = valuesByFacet.values[0]
             this.$data.insights[attr.code].most = valuesByFacet.values[valuesByFacet.values.length-1]
           }
-          
+
         })
 
         // console.log(this.$data.insights)
