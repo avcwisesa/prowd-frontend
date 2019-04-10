@@ -38,7 +38,7 @@
         searchPromo: 'Know which entity has been completed? Which has not?',
         viewPromo: 'See overall completeness of a class of entities',
         comparePromo: 'Compare completeness between different facets of a class',
-        mdaPromo: 'Multidimesional completeness analysis',
+        mdaPromo: 'Multidimensional completeness analysis',
       }
     }
   }
