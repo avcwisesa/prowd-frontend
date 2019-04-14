@@ -65,7 +65,6 @@
         ></v-select>
         </v-flex>
       </v-layout>
-      <!-- {{f1valuesAmount}} -->
     <v-switch
       label="Include 'none' in facet value"
       v-model="enableNone"
@@ -861,6 +860,10 @@ export default {
         })
         .catch((error) => {
           console.log(error)
+
+          this.loading = false
+
+          alert(error)
         })
     }
   },
