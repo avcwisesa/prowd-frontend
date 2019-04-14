@@ -107,7 +107,7 @@
                 <ul>
                   <li v-if="dimension == 1">
                     Most complete on <strong>{{ insights[entry.code].most.name }}</strong>
-                    ({{ insights[entry.code].most.value.toFixed(2) }}%)
+                    ({{ insights[entry.code].most.value }}%)
                   </li>
                   <li v-else>
                     Most complete on <strong>{{ insights[entry.code].most.facet1 + "-" + insights[entry.code].most.facet2 }}</strong>
@@ -116,7 +116,7 @@
 
                   <li v-if="dimension == 1">
                     Least complete on <strong>{{ insights[entry.code].least.name }}</strong>
-                    ({{ insights[entry.code].least.value.toFixed(2) }}%)
+                    ({{ insights[entry.code].least.value }}%)
                   </li>
                   <li v-else>
                     Least complete on <strong>{{ insights[entry.code].least.facet1 + "-" + insights[entry.code].least.facet2 }}</strong>
@@ -359,13 +359,13 @@ export default {
     }
   },
   methods: {
-    d1filter (f1, topf1, entities) {
+    d1filter (facets, limits, entities) {
       var f1s = []
       var result = {}
 
       entities.forEach((entity) => {
-        if (entity[f1.code + 'Label']) {
-          f1s.push(entity[f1.code + 'Label'].value)
+        if (entity[facets[0].code + 'Label']) {
+          f1s.push(entity[facets[0].code + 'Label'].value)
         }
       })
 
@@ -378,7 +378,7 @@ export default {
       })
 
       entities.forEach((entity) => {
-        var label1 = entity[f1.code + 'Label'] || { value: 'none' }
+        var label1 = entity[facets[0].code + 'Label'] || { value: 'none' }
         result[label1.value].push(entity)
 
         // add amount on key1
@@ -402,7 +402,7 @@ export default {
         return (b.amt - a.amt) * this.$data.selectSorting[0].value
       })
 
-      sort_key1 = sort_key1.slice(0, topf1)
+      sort_key1 = sort_key1.slice(0, limits[0])
       this.$data.f1v = sort_key1.map(e => e.key)
 
       this.$data.insights.top = this.$data.f1v.slice(0, 3)
@@ -410,17 +410,17 @@ export default {
 
       return result
     },
-    d2filter (f1, f2, topf1, topf2, entities) {
+    d2filter (facets, limits, entities) {
       var f1s = []
       var f2s = []
       var result = {}
 
       entities.forEach((entity) => {
-        if (entity[f1.code + 'Label']) {
-          f1s.push(entity[f1.code + 'Label'].value)
+        if (entity[facets[0].code + 'Label']) {
+          f1s.push(entity[facets[0].code + 'Label'].value)
         }
-        if (entity[f2.code + 'Label']) {
-          f2s.push(entity[f2.code + 'Label'].value)
+        if (entity[facets[1].code + 'Label']) {
+          f2s.push(entity[facets[1].code + 'Label'].value)
         }
       })
 
@@ -441,8 +441,8 @@ export default {
       })
 
       entities.forEach((entity) => {
-        var label1 = entity[f1.code + 'Label'] || { value: 'none' }
-        var label2 = entity[f2.code + 'Label'] || { value: 'none' }
+        var label1 = entity[facets[0].code + 'Label'] || { value: 'none' }
+        var label2 = entity[facets[1].code + 'Label'] || { value: 'none' }
 
         result[label1.value][label2.value].push(entity)
 
@@ -471,7 +471,7 @@ export default {
         sort_key2.sort((a, b) => {
           return (b.amt - a.amt) * this.$data.selectSorting[1].value
         })
-        sort_key2 = sort_key2.slice(0, topf2)
+        sort_key2 = sort_key2.slice(0, limits[1])
         sort_key2.forEach((key2) => {
           if(key2.amt) {
             amt += key2.amt
@@ -500,7 +500,7 @@ export default {
         return (b.amt - a.amt) * this.$data.selectSorting[0].value
       })
 
-      sort_key1 = sort_key1.slice(0, topf1)
+      sort_key1 = sort_key1.slice(0, limits[0])
       this.$data.f1v = sort_key1.map(e => e.key)
 
       tmp = tmp.filter(e => this.$data.f1v.includes(e.key1)
@@ -703,16 +703,12 @@ export default {
 
       var dataset = entities
       if (this.$data.dimension == 2) {
-        // console.log("2!!")
-        dataset = this.d2filter( this.$data.selectedFacet[0],
-                            this.$data.selectedFacet[1],
-                            this.$data.facetLimit[0],
-                            this.$data.facetLimit[1],
+        dataset = this.d2filter( this.$data.selectedFacet,
+                            this.$data.facetLimit,
                             entities)
       } else if (this.$data.dimension == 1) {
-        // console.log("1!!")
-        dataset = this.d1filter( this.$data.selectedFacet[0],
-                            this.$data.facetLimit[0],
+        dataset = this.d1filter( this.$data.selectedFacet,
+                            this.$data.facetLimit,
                             entities)
       }
 
