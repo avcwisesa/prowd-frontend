@@ -19,7 +19,7 @@
       <v-flex xs2 class="ml-3">
         <v-slider
           v-model="dimension"
-          :max="Math.min(facets.length, 2)"
+          :max="Math.min(facets.length, 3)"
           :min="0"
           :step="1"
         ></v-slider>
@@ -46,21 +46,12 @@
         </v-flex>
       <v-flex xs4>
         <v-select
-          v-if="dimension >= 1"
-          v-model="selectSorting[0]"
+          v-for="i in dimension" :key="`facet${i}`"
+          v-model="selectSorting[i-1]"
           :items="sortingOptions"
           item-text="text"
           item-value="value"
-          label="Row Sorting"
-          return-object
-        ></v-select>
-        <v-select
-          v-if="dimension >= 2"
-          v-model="selectSorting[1]"
-          :items="sortingOptions"
-          item-text="text"
-          item-value="value"
-          label="Column Sorting"
+          :label="`Facet ${i} Sorting`"
           return-object
         ></v-select>
         </v-flex>
@@ -241,6 +232,8 @@ export default {
     ])
     this.$data.dimension = this.facets.length
     for (var i = 0; i < this.$data.dimension; i++) {
+      this.$data.selectSorting[i] = this.$data.sortingOptions[0]
+      this.$data.facetLimit[i] = 5
       if (!this.selectedFacet[i]) {
         this.selectedFacet[i] = this.facets[i]
       }
@@ -287,11 +280,8 @@ export default {
             }]
           },
         },
-        facetLimit: [5, 5],
-        selectSorting: [
-          {text: 'Descending', value: 1},
-          {text: 'Descending', value: 1}
-        ],
+        facetLimit: [],
+        selectSorting: [],
         sortingOptions: [
           {text: 'Descending', value: 1},
           {text: 'Ascending', value: -1}
