@@ -105,22 +105,14 @@
                   </span>
                 </v-tooltip>
                 <ul>
-                  <li v-if="dimension == 1">
+                  <li>
                     Most complete on <strong>{{ insights[entry.code].most.name }}</strong>
-                    ({{ insights[entry.code].most.value }}%)
-                  </li>
-                  <li v-else>
-                    Most complete on <strong>{{ insights[entry.code].most.facet1 + "-" + insights[entry.code].most.facet2 }}</strong>
-                    ({{ insights[entry.code].most.value }}%)
+                    ({{ insights[entry.code].most.value.toFixed(2) }}%)
                   </li>
 
-                  <li v-if="dimension == 1">
+                  <li>
                     Least complete on <strong>{{ insights[entry.code].least.name }}</strong>
-                    ({{ insights[entry.code].least.value }}%)
-                  </li>
-                  <li v-else>
-                    Least complete on <strong>{{ insights[entry.code].least.facet1 + "-" + insights[entry.code].least.facet2 }}</strong>
-                    ({{ insights[entry.code].least.value }}%)
+                    ({{ insights[entry.code].least.value.toFixed(2) }}%)
                   </li>
 
                 </ul>
@@ -149,11 +141,10 @@
                 Attributes with Outlier Completeness (<span class="green--text font-weight-bold">High</span>):
               </div>
               <ul>
-                <li v-for="entry in insights.abnormalValues.high" :key="entry.facet1+entry.facet2">
+                <li v-for="entry in insights.abnormalValues.high" :key="entry.name">
                   <strong>{{ entry.attr }}</strong> on
-                  <strong v-if="entry.facet2">{{ entry.facet1 }}-{{ entry.facet2 }}</strong>
-                  <strong v-else>{{ entry.facet1 }}</strong>
-                  ({{ entry.value }}%)
+                  <strong>{{ entry.name }}</strong>
+                  ({{ entry.value.toFixed(2) }}%)
                   <v-tooltip top>
                     <v-icon slot="activator">info</v-icon>
                     <span>
@@ -170,11 +161,10 @@
                 Attributes with Outlier Completeness (<span class="red--text font-weight-bold">Low</span>):
               </div>
               <ul>
-                <li v-for="entry in insights.abnormalValues.low" :key="entry.facet1+entry.facet2">
+                <li v-for="entry in insights.abnormalValues.low" :key="entry.name">
                   <strong>{{ entry.attr }}</strong> on
-                  <strong v-if="entry.facet2">{{ entry.facet1 }}-{{ entry.facet2 }}</strong>
-                  <strong v-else>{{ entry.facet1 }}</strong>
-                  ({{ entry.value }}%)
+                  <strong>{{ entry.name }}</strong>
+                  ({{ entry.value.toFixed(2) }}%)
                   <v-tooltip top>
                     <v-icon slot="activator">info</v-icon>
                     <span>
@@ -582,8 +572,9 @@ export default {
           var percentage = Number.parseFloat(sum / size * 100)
           // console.log(value1, value2, attribute, percentage)
           this.$data.insights[attribute].values.push({
+            name: value1,
             facet1: value1,
-            value: percentage.toFixed(2)
+            value: percentage
           })
           data.push(percentage.toFixed(2))
           completenessScore += percentage
@@ -651,9 +642,10 @@ export default {
             completenessScore += percentage
 
             this.$data.insights[attribute].values.push({
+              name: value1 + "-" + value2,
               facet1: value1,
               facet2: value2,
-              value: percentage.toFixed(2)
+              value: percentage
             })
             data.push(percentage.toFixed(2))
           })
@@ -738,12 +730,29 @@ export default {
       }
 
       if (this.$data.dimension != 0) {
-          this.attributes.forEach((attr) => {
+        this.attributes.forEach((attr) => {
           this.$data.insights[attr.code].values.sort((a,b) => a.value - b.value)
           var len = this.$data.insights[attr.code].values.length
-          var q2 = parseInt(len / 2)
-          var q1Value = this.$data.insights[attr.code].values[parseInt(q2 / 2)].value
-          var q3Value = this.$data.insights[attr.code].values[parseInt( (len + q2) / 2)].value
+          var half = parseInt(len / 2)
+          var halfBound = half
+          var q1Value = 0
+          var q3Value = 0
+          if (len % 2 == 1) {
+            half += 1
+          }
+
+          if (halfBound % 2 == 0) {
+            var a = this.$data.insights[attr.code].values[parseInt(halfBound / 2)].value
+            var b = this.$data.insights[attr.code].values[parseInt(halfBound / 2) - 1].value
+            q1Value = (a + b) / 2
+
+            var c = this.$data.insights[attr.code].values[halfBound + parseInt(halfBound / 2)].value
+            var d = this.$data.insights[attr.code].values[halfBound + parseInt(halfBound / 2) - 1].value
+            q3Value = (c + d) / 2
+          } else {
+            q1Value = this.$data.insights[attr.code].values[parseInt(halfBound / 2)].value
+            q3Value = this.$data.insights[attr.code].values[halfBound + parseInt(halfBound / 2)].value
+          }
 
           var iqr = q3Value - q1Value
 
@@ -765,18 +774,16 @@ export default {
 
             if (entry.value > top) {
               this.$data.insights.abnormalValues.high.push({
+                name: entry.name,
                 attr: attr.name,
                 code: attr.code,
-                facet1: entry.facet1,
-                facet2: entry.facet2,
                 value: entry.value
               })
             } else if (entry.value < bottom) {
               this.$data.insights.abnormalValues.low.push({
+                name: entry.name,
                 attr: attr.name,
                 code: attr.code,
-                facet1: entry.facet1,
-                facet2: entry.facet2,
                 value: entry.value
               })
             }
@@ -785,11 +792,9 @@ export default {
           this.$data.insights[attr.code].values.sort((a,b) => a.value - b.value)
 
           if (this.$data.dimension == 2) {
-            // console.log(this.$data.insights[attr.code])
             this.$data.insights[attr.code].avg = this.$data.insights[attr.code].values.reduce((acc, e) => acc + parseFloat(e.value), 0) / this.$data.insights[attr.code].values.length
             this.$data.insights[attr.code].least = this.$data.insights[attr.code].values[0]
             this.$data.insights[attr.code].most = this.$data.insights[attr.code].values[this.$data.insights[attr.code].values.length-1]
-            // console.log(this.$data.insights[attr.code])
           } else if (this.$data.dimension == 1) {
             this.$data.f1v.forEach((facet) => {
               var avg = valuesByFacet[facet].reduce((acc, e) => acc + parseFloat(e), 0) / valuesByFacet[facet].length
@@ -807,7 +812,6 @@ export default {
 
         })
 
-        // console.log(this.$data.insights)
       }
     },
     postQuery () {
