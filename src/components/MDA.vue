@@ -19,7 +19,7 @@
       <v-flex xs2 class="ml-3">
         <v-slider
           v-model="dimension"
-          :max="Math.min(facets.length, 2)"
+          :max="Math.min(facets.length, maxDimension)"
           :min="0"
           :step="1"
         ></v-slider>
@@ -70,7 +70,7 @@
       label="Include 'none' in facet value"
       v-model="enableNone"
     ></v-switch>
-    <v-btn round color="primary" @click="postQuery()">Post Query</v-btn>
+    <v-btn round color="primary" @click="postQuery()">Refresh Dataset</v-btn>
     <v-progress-circular v-if="loading" :width="3" :size="50" indeterminate color="green"></v-progress-circular>
 
     <!-- Automatic Insights -->
@@ -239,7 +239,7 @@ export default {
       store.dispatch('LANGUAGES'),
       store.dispatch('FETCH_PROFILE_BY_ID', router.params.id)
     ])
-    this.$data.dimension = this.facets.length
+    this.$data.dimension = Math.min(this.facets.length, this.$data.maxDimension)
     for (var i = 0; i < this.$data.dimension; i++) {
       if (!this.selectedFacet[i]) {
         this.selectedFacet[i] = this.facets[i]
@@ -249,6 +249,7 @@ export default {
   },
   data () {
       return {
+        maxDimension: 2,
         on: true,
         insights: {
           top: [],
