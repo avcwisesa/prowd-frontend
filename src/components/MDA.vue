@@ -351,6 +351,7 @@ export default {
     d1filter (facets, limits, entities) {
       var f1s = []
       var result = {}
+      var checkDuplicate = {}
 
       entities.forEach((entity) => {
         if (entity[facets[0].code + 'Label']) {
@@ -364,10 +365,19 @@ export default {
       var result_amount = {}
       f1s.forEach((elem1) => {
         result[elem1] = []
+        checkDuplicate[elem1] = new Set()
       })
 
+
       entities.forEach((entity) => {
+        console.log(entity)
         var label1 = entity[facets[0].code + 'Label'] || { value: 'none' }
+
+        if (checkDuplicate[label1.value].has(entity.entity.value)) {
+          return
+        }
+
+        checkDuplicate[label1.value].add(entity.entity.value)
         result[label1.value].push(entity)
 
         // add amount on key1
@@ -403,6 +413,7 @@ export default {
       var f1s = []
       var f2s = []
       var result = {}
+      var checkDuplicate = {}
 
       entities.forEach((entity) => {
         if (entity[facets[0].code + 'Label']) {
@@ -424,8 +435,11 @@ export default {
       f1s.forEach((elem1) => {
         result[elem1] = {}
         result_amount_key1[elem1] = {}
+        checkDuplicate[elem1] = {}
+        checkDuplicate[elem1]['null'] = new Set()
         f2s.forEach((elem2) => {
           result[elem1][elem2] = []
+          checkDuplicate[elem1][elem2] = new Set()
         })
       })
 
@@ -433,10 +447,18 @@ export default {
         var label1 = entity[facets[0].code + 'Label'] || { value: 'none' }
         var label2 = entity[facets[1].code + 'Label'] || { value: 'none' }
 
+        if (checkDuplicate[label1.value][label2.value].has(entity.entity.value)) {
+          return
+        }
+
+        checkDuplicate[label1.value][label2.value].add(entity.entity.value)
         result[label1.value][label2.value].push(entity)
 
         // add amount on key1
-        result_amount[label1.value] = (result_amount[label1.value] || 0) + 1
+        if (!checkDuplicate[label1.value][label2.value].has(entity.entity.value)) {
+          checkDuplicate[label1.value]['null'].add(entity.entity.value)
+          result_amount[label1.value] = (result_amount[label1.value] || 0) + 1
+        }
         // add amount on key1Xkey2
         result_amount_key1[label1.value][label2.value] = (result_amount_key1[label1.value][label2.value] || 0) + 1
       })
