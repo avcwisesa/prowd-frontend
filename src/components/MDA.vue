@@ -19,7 +19,7 @@
       <v-flex xs2 class="ml-3">
         <v-slider
           v-model="dimension"
-          :max="Math.min(facets.length, 3)"
+          :max="Math.min(facets.length, maxDimension)"
           :min="0"
           :step="1"
         ></v-slider>
@@ -56,12 +56,11 @@
         ></v-select>
         </v-flex>
       </v-layout>
-      <!-- {{f1valuesAmount}} -->
     <v-switch
       label="Include 'none' in facet value"
       v-model="enableNone"
     ></v-switch>
-    <v-btn round color="primary" @click="postQuery()">Post Query</v-btn>
+    <v-btn round color="primary" @click="postQuery()">Refresh Dataset</v-btn>
     <v-progress-circular v-if="loading" :width="3" :size="50" indeterminate color="green"></v-progress-circular>
 
     <!-- Automatic Insights -->
@@ -96,22 +95,14 @@
                   </span>
                 </v-tooltip>
                 <ul>
-                  <li v-if="dimension == 1">
+                  <li>
                     Most complete on <strong>{{ insights[entry.code].most.name }}</strong>
                     ({{ insights[entry.code].most.value.toFixed(2) }}%)
                   </li>
-                  <li v-else>
-                    Most complete on <strong>{{ insights[entry.code].most.facet1 + "-" + insights[entry.code].most.facet2 }}</strong>
-                    ({{ insights[entry.code].most.value }}%)
-                  </li>
 
-                  <li v-if="dimension == 1">
+                  <li>
                     Least complete on <strong>{{ insights[entry.code].least.name }}</strong>
                     ({{ insights[entry.code].least.value.toFixed(2) }}%)
-                  </li>
-                  <li v-else>
-                    Least complete on <strong>{{ insights[entry.code].least.facet1 + "-" + insights[entry.code].least.facet2 }}</strong>
-                    ({{ insights[entry.code].least.value }}%)
                   </li>
 
                 </ul>
@@ -140,11 +131,10 @@
                 Attributes with Outlier Completeness (<span class="green--text font-weight-bold">High</span>):
               </div>
               <ul>
-                <li v-for="entry in insights.abnormalValues.high" :key="entry.facet1+entry.facet2">
+                <li v-for="entry in insights.abnormalValues.high" :key="entry.name">
                   <strong>{{ entry.attr }}</strong> on
-                  <strong v-if="entry.facet2">{{ entry.facet1 }}-{{ entry.facet2 }}</strong>
-                  <strong v-else>{{ entry.facet1 }}</strong>
-                  ({{ entry.value }}%)
+                  <strong>{{ entry.name }}</strong>
+                  ({{ entry.value.toFixed(2) }}%)
                   <v-tooltip top>
                     <v-icon slot="activator">info</v-icon>
                     <span>
@@ -161,11 +151,10 @@
                 Attributes with Outlier Completeness (<span class="red--text font-weight-bold">Low</span>):
               </div>
               <ul>
-                <li v-for="entry in insights.abnormalValues.low" :key="entry.facet1+entry.facet2">
+                <li v-for="entry in insights.abnormalValues.low" :key="entry.name">
                   <strong>{{ entry.attr }}</strong> on
-                  <strong v-if="entry.facet2">{{ entry.facet1 }}-{{ entry.facet2 }}</strong>
-                  <strong v-else>{{ entry.facet1 }}</strong>
-                  ({{ entry.value }}%)
+                  <strong>{{ entry.name }}</strong>
+                  ({{ entry.value.toFixed(2) }}%)
                   <v-tooltip top>
                     <v-icon slot="activator">info</v-icon>
                     <span>
@@ -230,7 +219,7 @@ export default {
       store.dispatch('LANGUAGES'),
       store.dispatch('FETCH_PROFILE_BY_ID', router.params.id)
     ])
-    this.$data.dimension = this.facets.length
+    this.$data.dimension = Math.min(this.facets.length, this.$data.maxDimension)
     for (var i = 0; i < this.$data.dimension; i++) {
       this.$data.selectSorting[i] = this.$data.sortingOptions[0]
       this.$data.facetLimit[i] = 5
@@ -242,6 +231,7 @@ export default {
   },
   data () {
       return {
+        maxDimension: 2,
         on: true,
         insights: {
           top: [],
@@ -348,13 +338,14 @@ export default {
     }
   },
   methods: {
-    d1filter (f1, topf1, entities) {
+    d1filter (facets, limits, entities) {
       var f1s = []
       var result = {}
+      var checkDuplicate = {}
 
       entities.forEach((entity) => {
-        if (entity[f1.code + 'Label']) {
-          f1s.push(entity[f1.code + 'Label'].value)
+        if (entity[facets[0].code + 'Label']) {
+          f1s.push(entity[facets[0].code + 'Label'].value)
         }
       })
 
@@ -364,10 +355,19 @@ export default {
       var result_amount = {}
       f1s.forEach((elem1) => {
         result[elem1] = []
+        checkDuplicate[elem1] = new Set()
       })
 
+
       entities.forEach((entity) => {
-        var label1 = entity[f1.code + 'Label'] || { value: 'none' }
+        console.log(entity)
+        var label1 = entity[facets[0].code + 'Label'] || { value: 'none' }
+
+        if (checkDuplicate[label1.value].has(entity.entity.value)) {
+          return
+        }
+
+        checkDuplicate[label1.value].add(entity.entity.value)
         result[label1.value].push(entity)
 
         // add amount on key1
@@ -391,7 +391,7 @@ export default {
         return (b.amt - a.amt) * this.$data.selectSorting[0].value
       })
 
-      sort_key1 = sort_key1.slice(0, topf1)
+      sort_key1 = sort_key1.slice(0, limits[0])
       this.$data.f1v = sort_key1.map(e => e.key)
 
       this.$data.insights.top = this.$data.f1v.slice(0, 3)
@@ -399,17 +399,18 @@ export default {
 
       return result
     },
-    d2filter (f1, f2, topf1, topf2, entities) {
+    d2filter (facets, limits, entities) {
       var f1s = []
       var f2s = []
       var result = {}
+      var checkDuplicate = {}
 
       entities.forEach((entity) => {
-        if (entity[f1.code + 'Label']) {
-          f1s.push(entity[f1.code + 'Label'].value)
+        if (entity[facets[0].code + 'Label']) {
+          f1s.push(entity[facets[0].code + 'Label'].value)
         }
-        if (entity[f2.code + 'Label']) {
-          f2s.push(entity[f2.code + 'Label'].value)
+        if (entity[facets[1].code + 'Label']) {
+          f2s.push(entity[facets[1].code + 'Label'].value)
         }
       })
 
@@ -424,19 +425,30 @@ export default {
       f1s.forEach((elem1) => {
         result[elem1] = {}
         result_amount_key1[elem1] = {}
+        checkDuplicate[elem1] = {}
+        checkDuplicate[elem1]['null'] = new Set()
         f2s.forEach((elem2) => {
           result[elem1][elem2] = []
+          checkDuplicate[elem1][elem2] = new Set()
         })
       })
 
       entities.forEach((entity) => {
-        var label1 = entity[f1.code + 'Label'] || { value: 'none' }
-        var label2 = entity[f2.code + 'Label'] || { value: 'none' }
+        var label1 = entity[facets[0].code + 'Label'] || { value: 'none' }
+        var label2 = entity[facets[1].code + 'Label'] || { value: 'none' }
 
+        if (checkDuplicate[label1.value][label2.value].has(entity.entity.value)) {
+          return
+        }
+
+        checkDuplicate[label1.value][label2.value].add(entity.entity.value)
         result[label1.value][label2.value].push(entity)
 
         // add amount on key1
-        result_amount[label1.value] = (result_amount[label1.value] || 0) + 1
+        if (!checkDuplicate[label1.value][label2.value].has(entity.entity.value)) {
+          checkDuplicate[label1.value]['null'].add(entity.entity.value)
+          result_amount[label1.value] = (result_amount[label1.value] || 0) + 1
+        }
         // add amount on key1Xkey2
         result_amount_key1[label1.value][label2.value] = (result_amount_key1[label1.value][label2.value] || 0) + 1
       })
@@ -460,7 +472,7 @@ export default {
         sort_key2.sort((a, b) => {
           return (b.amt - a.amt) * this.$data.selectSorting[1].value
         })
-        sort_key2 = sort_key2.slice(0, topf2)
+        sort_key2 = sort_key2.slice(0, limits[1])
         sort_key2.forEach((key2) => {
           if(key2.amt) {
             amt += key2.amt
@@ -489,7 +501,7 @@ export default {
         return (b.amt - a.amt) * this.$data.selectSorting[0].value
       })
 
-      sort_key1 = sort_key1.slice(0, topf1)
+      sort_key1 = sort_key1.slice(0, limits[0])
       this.$data.f1v = sort_key1.map(e => e.key)
 
       tmp = tmp.filter(e => this.$data.f1v.includes(e.key1)
@@ -571,8 +583,9 @@ export default {
           var percentage = Number.parseFloat(sum / size * 100)
           // console.log(value1, value2, attribute, percentage)
           this.$data.insights[attribute].values.push({
+            name: value1,
             facet1: value1,
-            value: percentage.toFixed(2)
+            value: percentage
           })
           data.push(percentage.toFixed(2))
           completenessScore += percentage
@@ -640,9 +653,10 @@ export default {
             completenessScore += percentage
 
             this.$data.insights[attribute].values.push({
+              name: value1 + "-" + value2,
               facet1: value1,
               facet2: value2,
-              value: percentage.toFixed(2)
+              value: percentage
             })
             data.push(percentage.toFixed(2))
           })
@@ -692,16 +706,12 @@ export default {
 
       var dataset = entities
       if (this.$data.dimension == 2) {
-        // console.log("2!!")
-        dataset = this.d2filter( this.$data.selectedFacet[0],
-                            this.$data.selectedFacet[1],
-                            this.$data.facetLimit[0],
-                            this.$data.facetLimit[1],
+        dataset = this.d2filter( this.$data.selectedFacet,
+                            this.$data.facetLimit,
                             entities)
       } else if (this.$data.dimension == 1) {
-        // console.log("1!!")
-        dataset = this.d1filter( this.$data.selectedFacet[0],
-                            this.$data.facetLimit[0],
+        dataset = this.d1filter( this.$data.selectedFacet,
+                            this.$data.facetLimit,
                             entities)
       }
 
@@ -731,12 +741,29 @@ export default {
       }
 
       if (this.$data.dimension != 0) {
-          this.attributes.forEach((attr) => {
+        this.attributes.forEach((attr) => {
           this.$data.insights[attr.code].values.sort((a,b) => a.value - b.value)
           var len = this.$data.insights[attr.code].values.length
-          var q2 = parseInt(len / 2)
-          var q1Value = this.$data.insights[attr.code].values[parseInt(q2 / 2)].value
-          var q3Value = this.$data.insights[attr.code].values[parseInt( (len + q2) / 2)].value
+          var half = parseInt(len / 2)
+          var halfBound = half
+          var q1Value = 0
+          var q3Value = 0
+          if (len % 2 == 1) {
+            half += 1
+          }
+
+          if (halfBound % 2 == 0) {
+            var a = this.$data.insights[attr.code].values[parseInt(halfBound / 2)].value
+            var b = this.$data.insights[attr.code].values[parseInt(halfBound / 2) - 1].value
+            q1Value = (a + b) / 2
+
+            var c = this.$data.insights[attr.code].values[halfBound + parseInt(halfBound / 2)].value
+            var d = this.$data.insights[attr.code].values[halfBound + parseInt(halfBound / 2) - 1].value
+            q3Value = (c + d) / 2
+          } else {
+            q1Value = this.$data.insights[attr.code].values[parseInt(halfBound / 2)].value
+            q3Value = this.$data.insights[attr.code].values[halfBound + parseInt(halfBound / 2)].value
+          }
 
           var iqr = q3Value - q1Value
 
@@ -758,18 +785,16 @@ export default {
 
             if (entry.value > top) {
               this.$data.insights.abnormalValues.high.push({
+                name: entry.name,
                 attr: attr.name,
                 code: attr.code,
-                facet1: entry.facet1,
-                facet2: entry.facet2,
                 value: entry.value
               })
             } else if (entry.value < bottom) {
               this.$data.insights.abnormalValues.low.push({
+                name: entry.name,
                 attr: attr.name,
                 code: attr.code,
-                facet1: entry.facet1,
-                facet2: entry.facet2,
                 value: entry.value
               })
             }
@@ -778,11 +803,9 @@ export default {
           this.$data.insights[attr.code].values.sort((a,b) => a.value - b.value)
 
           if (this.$data.dimension == 2) {
-            // console.log(this.$data.insights[attr.code])
             this.$data.insights[attr.code].avg = this.$data.insights[attr.code].values.reduce((acc, e) => acc + parseFloat(e.value), 0) / this.$data.insights[attr.code].values.length
             this.$data.insights[attr.code].least = this.$data.insights[attr.code].values[0]
             this.$data.insights[attr.code].most = this.$data.insights[attr.code].values[this.$data.insights[attr.code].values.length-1]
-            // console.log(this.$data.insights[attr.code])
           } else if (this.$data.dimension == 1) {
             this.$data.f1v.forEach((facet) => {
               var avg = valuesByFacet[facet].reduce((acc, e) => acc + parseFloat(e), 0) / valuesByFacet[facet].length
@@ -800,7 +823,6 @@ export default {
 
         })
 
-        // console.log(this.$data.insights)
       }
     },
     postQuery () {
@@ -850,6 +872,10 @@ export default {
         })
         .catch((error) => {
           console.log(error)
+
+          this.loading = false
+
+          alert(error)
         })
     }
   },
