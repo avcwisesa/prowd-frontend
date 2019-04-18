@@ -10,9 +10,8 @@
       >
         <v-text-field
           v-model="dimension"
+          :rules="[rules.required, rules.maxDimension]"
           class="mt-0"
-          hide-details
-          single-line
           type="number"
         ></v-text-field>
       </v-flex>
@@ -62,7 +61,6 @@
     ></v-switch>
     <v-btn round color="primary" @click="postQuery()">Refresh Dataset</v-btn>
     <v-progress-circular v-if="loading" :width="3" :size="50" indeterminate color="green"></v-progress-circular>
-
     <!-- Automatic Insights -->
     <v-flex v-if="!loading && dimension > 0" xs12>
       <v-card class="mt-3 pb-1">
@@ -191,7 +189,43 @@
               <canvas :id="f1value"></canvas>
             </div>
             <v-layout v-if="dimension == 2" row align-content-center class="horiz-scroll">
-              <v-flex xs4 v-for="f2value in f2vv[f1value]" v-bind:key="f2value">
+              <v-flex xs4 v-for="f2value in f2vv[layer][f1value]" v-bind:key="f2value">
+                <div class="pos-relative">
+                  <v-card-title class="headline">{{f2value}} </v-card-title>
+                  <v-card-text :id="f1value + f2value + 'amount'"></v-card-text>
+                  <canvas :id="f1value + f2value"></canvas>
+                </div>
+              </v-flex>
+            </v-layout>
+          </v-card>
+        </v-flex>
+      </div>
+    </div>
+    <div v-if="dimension == 3">
+      <v-card v-if="dimension == 3" class="mt-3">
+        <v-card-title class="headline">Layer Selection</v-card-title>
+        <v-flex xs4 class="ml-3">
+        <v-select
+          v-model="layer"
+          :items="layerValues"
+          item-value="key"
+          :label="`Layer`"
+        >
+          <template slot="item" slot-scope="data">
+            {{ data.item.key }} ({{ data.item.amt }})
+          </template>
+          <template slot="selection" slot-scope="data">
+            {{ data.item.key }}
+          </template>
+        </v-select>
+        </v-flex>
+      </v-card>
+      <div v-for="f1value in d3f1v[layer]" v-bind:key=f1value class="mt-3">
+        <v-flex xs12>
+          <v-card class="px-1 pb-1">
+            <v-card-title class="headline">{{f1value}} ({{amount[`${layer}-${f1value}`]}})</v-card-title>
+            <v-layout row align-content-center class="horiz-scroll">
+              <v-flex xs4 v-for="f2value in d3f2vv[layer][f1value]" v-bind:key="f2value">
                 <div class="pos-relative">
                   <v-card-title class="headline">{{f2value}} </v-card-title>
                   <v-card-text :id="f1value + f2value + 'amount'"></v-card-text>
@@ -231,7 +265,7 @@ export default {
   },
   data () {
       return {
-        maxDimension: 2,
+        maxDimension: 3,
         on: true,
         insights: {
           top: [],
@@ -246,9 +280,13 @@ export default {
         selectedFacet: [],
         enableNone: false,
         amount: {},
+        layerValues: [],
+        layer: null,
         f1v: [],
+        d3f1v: {},
         f2v: [],
         f2vv: {},
+        d3f2vv: {},
         loading: false,
         options: {
           responsive: true,
@@ -269,6 +307,10 @@ export default {
                 }
             }]
           },
+        },
+        rules: {
+          required: value => !!value || 'Required.',
+          maxDimension: value => value <= this.$data.maxDimension || `Max dimension is ${this.$data.maxDimension}`
         },
         facetLimit: [],
         selectSorting: [],
@@ -328,7 +370,7 @@ export default {
       return this.$store.state.filters
     },
     f1values () {
-      return Array.from(this.$data.f1v)
+      return Array.from(this.$data.d3f1v)
     },
     f2values () {
       return Array.from(this.$data.f2v)
@@ -360,7 +402,7 @@ export default {
 
 
       entities.forEach((entity) => {
-        console.log(entity)
+        // console.log(entity)
         var label1 = entity[facets[0].code + 'Label'] || { value: 'none' }
 
         if (checkDuplicate[label1.value].has(entity.entity.value)) {
@@ -445,7 +487,7 @@ export default {
         result[label1.value][label2.value].push(entity)
 
         // add amount on key1
-        if (!checkDuplicate[label1.value][label2.value].has(entity.entity.value)) {
+        if (!checkDuplicate[label1.value]['null'].has(entity.entity.value)) {
           checkDuplicate[label1.value]['null'].add(entity.entity.value)
           result_amount[label1.value] = (result_amount[label1.value] || 0) + 1
         }
@@ -510,6 +552,138 @@ export default {
 
       this.$data.insights.top = tmp.slice(0, 3)
       this.$data.insights.bottom = tmp.slice(-3).reverse()
+
+      return result
+    },
+    d3filter (facets, limits, entities) {
+      var checkDuplicate = {}
+      var facetValues = []
+      var result = {}
+
+      for (var i = 1; i <= 3; i++) {
+        facetValues[i] = []
+      }
+
+      entities.forEach((entity) => {
+        for (var i = 1; i <= 3; i++) {
+          if (entity[facets[i-1].code + 'Label']) {
+            facetValues[i].push(entity[facets[i-1].code + 'Label'].value)
+          }
+        }
+      })
+      // console.log(facetValues)
+
+      var resultAmount = {}
+      for (var i = 1; i <= 3; i++) {
+        facetValues[i].push('none')
+        facetValues[i] = new Set(facetValues[i])
+      }
+
+      facetValues[1].forEach((facet1) => {
+        result[facet1] = {}
+        checkDuplicate[facet1] = {}
+        checkDuplicate[facet1]['null'] = new Set()
+
+        facetValues[2].forEach((facet2) => {
+          result[facet1][facet2] = {}
+          checkDuplicate[facet1][facet2] = {}
+          checkDuplicate[facet1][facet2]['null'] = new Set()
+
+          facetValues[3].forEach((facet3) => {
+            result[facet1][facet2][facet3] = []
+            checkDuplicate[facet1][facet2][facet3] = new Set()
+          })
+        })
+      })
+
+      entities.forEach((entity) => {
+        var facet1 = entity[facets[0].code + 'Label'] || { value: 'none' }
+        var facet2 = entity[facets[1].code + 'Label'] || { value: 'none' }
+        var facet3 = entity[facets[2].code + 'Label'] || { value: 'none' }
+
+        if (checkDuplicate[facet1.value][facet2.value][facet3.value].has(entity.entity.value)) {
+          return
+        }
+        checkDuplicate[facet1.value][facet2.value][facet3.value].add(entity.entity.value)
+        result[facet1.value][facet2.value][facet3.value].push(entity)
+
+        if (checkDuplicate[facet1.value][facet2.value]['null'].has(entity.entity.value)) {
+          return
+        }
+        checkDuplicate[facet1.value][facet2.value]['null'].add(entity.entity.value)
+        resultAmount[facet1.value+facet2.value] = (resultAmount[facet1.value+facet2.value] || 0) + 1
+
+        if (checkDuplicate[facet1.value]['null'].has(entity.entity.value)) {
+          return
+        }
+        checkDuplicate[facet1.value]['null'].add(entity.entity.value)
+        resultAmount[facet1.value] = (resultAmount[facet1.value] || 0) + 1
+      })
+
+      if (!this.$data.enableNone){
+        for (var i = 1; i <= 3; i++) {
+          facetValues[i].delete('none')
+        }
+      }
+
+      var facetFilter1 = []
+      var cumulativeAmounts = []
+      facetValues[1].forEach((facet1) => {
+        var facetFilter2 = []
+        this.$data.d3f2vv[facet1] = {}
+        facetValues[2].forEach((facet2) => {
+          var facetFilter3 = []
+          facetValues[3].forEach((facet3) => {
+            facetFilter3.push({
+              'key': facet3,
+              'amt': result[facet1][facet2][facet3].length
+            })
+            cumulativeAmounts.push({
+              'key': `${facet1}-${facet2}-${facet3}`,
+              'amt': result[facet1][facet2][facet3].length
+            })
+            this.$data.amount[`${facet1}-${facet2}-${facet3}`] = result[facet1][facet2][facet3].length
+          })
+          facetFilter3.sort((a, b) => {
+            return (b.amt - a.amt) * this.$data.selectSorting[2].value
+          })
+          facetFilter3 = facetFilter3.slice(0, limits[2])
+          this.$data.d3f2vv[facet1][facet2] = facetFilter3.map(e => e.key)
+          var facetFilter2Length = facetFilter3.reduce((acc, facet) => acc + facet.amt, 0)
+          facetFilter2.push({
+            'key': facet2,
+            'amt': facetFilter2Length
+          })
+          this.$data.amount[`${facet1}-${facet2}`] = facetFilter2Length
+        })
+        facetFilter2.sort((a, b) => {
+          return (b.amt - a.amt) * this.$data.selectSorting[1].value
+        })
+        facetFilter2 = facetFilter2.slice(0, limits[1])
+        this.$data.d3f1v[facet1] = facetFilter2.map(e => e.key)
+        facetFilter1.push({
+          'key': facet1,
+          'amt': facetFilter2.reduce((acc, facet) => acc + facet.amt, 0)
+        })
+      })
+      facetFilter1.sort((a, b) => {
+        return (b.amt - a.amt) * this.$data.selectSorting[0].value
+      })
+      facetFilter1 = facetFilter1.slice(0, limits[0])
+      this.$data.layerValues = facetFilter1
+      if (!this.$data.layer) {
+        this.$data.layer = this.$data.layerValues[0].key
+        // console.log("assign1")
+        // console.log(this.$data.layer)
+        // console.log(this.$data.layerValues)
+        // console.log("assign2")
+      }
+
+      cumulativeAmounts = cumulativeAmounts.sort((a, b) => b.amt - a.amt
+              ).map(e => e.key)
+
+      this.$data.insights.top = cumulativeAmounts.slice(0, 3)
+      this.$data.insights.bottom = cumulativeAmounts.slice(-3).reverse()
 
       return result
     },
@@ -689,6 +863,85 @@ export default {
       this.$data.insights.completenessScore.high = this.$data.insights.completenessScore.slice(0, 3)
       this.$data.insights.completenessScore.low = this.$data.insights.completenessScore.slice(-3).reverse()
     },
+    d3Processing (dataset) {
+      this.$data.insights.completenessScore = []
+      // console.log(this.$data.d3f1v)
+      // console.log(this.$data.layer)
+
+      this.$data.layerValues.forEach((layer) => {
+        this.$data.d3f1v[layer.key].forEach((value1) => {
+
+        this.$data.d3f2vv[layer.key][value1].forEach((value2) => {
+          if (typeof dataset[layer.key][value1][value2] == 'undefined') {
+            return
+          }
+          var chartData = {
+            labels: this.attributeNames,
+            datasets: []
+          }
+
+          var completenessScore = 0
+          var data = []
+          var subset = dataset[layer.key][value1][value2]
+          var size = subset.length
+
+          this.$data.amount[`${layer.key}-${value1}-${value2}`] = size
+
+          if (size == 0) {
+            return
+          }
+
+          this.attributeCodes.forEach((attribute) => {
+            var sum = subset.reduce((acc, entity) => {
+              var attributeExists = entity[attribute + 'Label'] || 'none'
+              if (attributeExists == 'none') {
+                return acc
+              } else {
+                return acc + 1
+              }
+            }, 0)
+            var percentage = Number.parseFloat(sum / size * 100)
+
+            completenessScore += percentage
+
+            this.$data.insights[attribute].values.push({
+              name: `${layer.key}-${value1}-${value2}`,
+              facet1: value1,
+              facet2: value2,
+              value: percentage
+            })
+            data.push(percentage.toFixed(2))
+          })
+
+          completenessScore /= this.attributeCodes.length
+
+          this.$data.insights.completenessScore.push({
+            name: value1 + "-" + value2,
+            score: completenessScore
+          })
+
+          chartData.datasets.push({
+            label: 'Average Completeness',
+            backgroundColor: '#41b883',
+            data: data
+          })
+
+          this.$nextTick(() => {
+            const ctx = document.getElementById(value1 + value2 + 'amount')
+            if (ctx) {
+              ctx.innerText = this.defaultAmountText + size
+              this.createChart(value1 + value2, chartData)
+            }
+          })
+        })
+      })
+      })
+
+      this.$data.insights.completenessScore.sort((a,b) => b.score - a.score)
+
+      this.$data.insights.completenessScore.high = this.$data.insights.completenessScore.slice(0, 3)
+      this.$data.insights.completenessScore.low = this.$data.insights.completenessScore.slice(-3).reverse()
+    },
     createChart (chartId, chartData) {
       // console.log(chartData)
       const ctx = document.getElementById(chartId)
@@ -705,7 +958,11 @@ export default {
       })
 
       var dataset = entities
-      if (this.$data.dimension == 2) {
+      if (this.$data.dimension == 3) {
+        dataset = this.d3filter( this.$data.selectedFacet,
+                            this.$data.facetLimit,
+                            entities)
+      } else if (this.$data.dimension == 2) {
         dataset = this.d2filter( this.$data.selectedFacet,
                             this.$data.facetLimit,
                             entities)
@@ -732,7 +989,9 @@ export default {
         low: []
       }
 
-      if (this.$data.dimension == 2) {
+      if (this.$data.dimension == 3) {
+        this.d3Processing(dataset)
+      } else if (this.$data.dimension == 2) {
         this.d2Processing(dataset)
       } else if (this.$data.dimension == 1) {
         this.d1Processing(dataset)
@@ -742,6 +1001,8 @@ export default {
 
       if (this.$data.dimension != 0) {
         this.attributes.forEach((attr) => {
+          // console.log("HHHHHHHHHHHHHHHHHHHHHHH")
+          // console.log(this.$data.insights[attr.code].values)
           this.$data.insights[attr.code].values.sort((a,b) => a.value - b.value)
           var len = this.$data.insights[attr.code].values.length
           var half = parseInt(len / 2)
@@ -753,6 +1014,7 @@ export default {
           }
 
           if (halfBound % 2 == 0) {
+            // console.log(parseInt(halfBound / 2))
             var a = this.$data.insights[attr.code].values[parseInt(halfBound / 2)].value
             var b = this.$data.insights[attr.code].values[parseInt(halfBound / 2) - 1].value
             q1Value = (a + b) / 2
@@ -802,7 +1064,7 @@ export default {
 
           this.$data.insights[attr.code].values.sort((a,b) => a.value - b.value)
 
-          if (this.$data.dimension == 2) {
+          if (this.$data.dimension == 2 || this.$data.dimension == 3) {
             this.$data.insights[attr.code].avg = this.$data.insights[attr.code].values.reduce((acc, e) => acc + parseFloat(e.value), 0) / this.$data.insights[attr.code].values.length
             this.$data.insights[attr.code].least = this.$data.insights[attr.code].values[0]
             this.$data.insights[attr.code].most = this.$data.insights[attr.code].values[this.$data.insights[attr.code].values.length-1]
@@ -824,6 +1086,8 @@ export default {
         })
 
       }
+
+      // console.log("check")
     },
     postQuery () {
       this.loading = true
@@ -867,6 +1131,7 @@ export default {
           this.$store.commit('SET_ENTITIES1', entities)
 
           this.processVisualisation(entities)
+          // console.log("check2")
 
           this.loading = false
         })
@@ -881,6 +1146,9 @@ export default {
   },
   watch: {
     dimension: function (newDimesion, oldDimension) {
+      this.processVisualisation(this.entities)
+    },
+    layer: function (newLayer, oldLayer) {
       this.processVisualisation(this.entities)
     },
     selectedFacet: function (newFacets, oldFacets) {
