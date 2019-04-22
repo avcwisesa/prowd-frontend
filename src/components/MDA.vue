@@ -670,14 +670,10 @@ export default {
         return (b.amt - a.amt) * this.$data.selectSorting[0].value
       })
       facetFilter1 = facetFilter1.slice(0, limits[0])
-      this.$data.layerValues = facetFilter1
-      if (!this.$data.layer) {
-        this.$data.layer = this.$data.layerValues[0].key
-        // console.log("assign1")
-        // console.log(this.$data.layer)
-        // console.log(this.$data.layerValues)
-        // console.log("assign2")
+      if (!this.$data.layerValues[0] || this.$data.layerValues[0].key != facetFilter1[0].key) {
+        this.$data.layer = facetFilter1[0].key
       }
+      this.$data.layerValues = facetFilter1
 
       cumulativeAmounts = cumulativeAmounts.sort((a, b) => b.amt - a.amt
               ).map(e => e.key)
