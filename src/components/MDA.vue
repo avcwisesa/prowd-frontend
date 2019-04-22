@@ -10,7 +10,7 @@
       >
         <v-text-field
           v-model="dimension"
-          :rules="[rules.required, rules.maxDimension]"
+          :rules="[rules.maxDimension]"
           class="mt-0"
           type="number"
         ></v-text-field>
