@@ -189,11 +189,14 @@
               <canvas :id="f1value"></canvas>
             </div>
             <v-layout v-if="dimension == 2" row align-content-center class="horiz-scroll">
-              <v-flex xs4 v-for="f2value in f2vv[layer][f1value]" v-bind:key="f2value">
+              <v-flex xs4 v-for="f2value in f2vv[f1value]" v-bind:key="f2value">
                 <div class="pos-relative">
-                  <v-card-title class="headline">{{f2value}} </v-card-title>
-                  <v-card-text :id="f1value + f2value + 'amount'"></v-card-text>
-                  <canvas :id="f1value + f2value"></canvas>
+                  <v-tooltip top>
+                    <v-card-title slot="activator" class="headline">{{ truncateString(23)(f2value) }}</v-card-title>
+                    <span>{{ f2value }}</span>
+                  </v-tooltip>
+                  <v-card-text :id="`${f1value}-${f2value}-amount`"></v-card-text>
+                  <canvas :id="`${f1value}-${f2value}`"></canvas>
                 </div>
               </v-flex>
             </v-layout>
@@ -227,7 +230,10 @@
             <v-layout row align-content-center class="horiz-scroll">
               <v-flex xs4 v-for="f2value in d3f2vv[layer][f1value]" v-bind:key="f2value">
                 <div class="pos-relative">
-                  <v-card-title class="headline">{{f2value}} </v-card-title>
+                  <v-tooltip top>
+                    <v-card-title slot="activator" class="headline">{{ truncateString(23)(f2value) }}</v-card-title>
+                    <span>{{ f2value }}</span>
+                  </v-tooltip>
                   <v-card-text :id="`${layer}-${f1value}-${f2value}-amount`"></v-card-text>
                   <canvas :id="`${layer}-${f1value}-${f2value}`"></canvas>
                 </div>
@@ -349,10 +355,7 @@ export default {
     },
     attributeNames () {
       var attributes = this.$store.state.attributes
-      var length = 15
-      return attributes.map(attr => {
-        return attr.name.length > length ? attr.name.substring(0, length - 3) + "..." : attr.name.substring(0, length)
-      })
+      return attributes.map(attr => attr.name).map(this.truncateString(15))
     },
     attributes () {
       return this.$store.state.attributes
@@ -845,10 +848,10 @@ export default {
           })
 
           this.$nextTick(() => {
-            const ctx = document.getElementById(value1 + value2 + 'amount')
+            const ctx = document.getElementById(`${value1}-${value2}-amount`)
             if (ctx) {
               ctx.innerText = this.defaultAmountText + size
-              this.createChart(value1 + value2, chartData)
+              this.createChart(`${value1}-${value2}`, chartData)
             }
           })
         })
@@ -1137,6 +1140,11 @@ export default {
 
           alert(error)
         })
+    },
+    truncateString (len) {
+      return str => {
+        return str.length > len ? str.substring(0, len - 3) + "..." : str.substring(0, len)
+      }
     }
   },
   watch: {
