@@ -180,7 +180,7 @@
         </v-card>
       </v-flex>
     </div>
-    <div v-if="dimension != 0">
+    <div v-if="dimension != 0 && dimension != 3">
       <div v-for="f1value in f1values" v-bind:key=f1value class="mt-3">
         <v-flex xs12>
           <v-card class="px-1 pb-1">
@@ -228,8 +228,8 @@
               <v-flex xs4 v-for="f2value in d3f2vv[layer][f1value]" v-bind:key="f2value">
                 <div class="pos-relative">
                   <v-card-title class="headline">{{f2value}} </v-card-title>
-                  <v-card-text :id="f1value + f2value + 'amount'"></v-card-text>
-                  <canvas :id="f1value + f2value"></canvas>
+                  <v-card-text :id="`${layer}-${f1value}-${f2value}-amount`"></v-card-text>
+                  <canvas :id="`${layer}-${f1value}-${f2value}`"></canvas>
                 </div>
               </v-flex>
             </v-layout>
@@ -370,7 +370,7 @@ export default {
       return this.$store.state.filters
     },
     f1values () {
-      return Array.from(this.$data.d3f1v)
+      return Array.from(this.$data.f1v)
     },
     f2values () {
       return Array.from(this.$data.f2v)
@@ -927,10 +927,12 @@ export default {
           })
 
           this.$nextTick(() => {
-            const ctx = document.getElementById(value1 + value2 + 'amount')
+            const ctx = document.getElementById(`${layer.key}-${value1}-${value2}-amount`)
+            console.log(`${layer.key}-${value1}-${value2}`)
+            console.log(ctx)
             if (ctx) {
               ctx.innerText = this.defaultAmountText + size
-              this.createChart(value1 + value2, chartData)
+              this.createChart(`${layer.key}-${value1}-${value2}`, chartData)
             }
           })
         })
@@ -1001,8 +1003,6 @@ export default {
 
       if (this.$data.dimension != 0) {
         this.attributes.forEach((attr) => {
-          // console.log("HHHHHHHHHHHHHHHHHHHHHHH")
-          // console.log(this.$data.insights[attr.code].values)
           this.$data.insights[attr.code].values.sort((a,b) => a.value - b.value)
           var len = this.$data.insights[attr.code].values.length
           var half = parseInt(len / 2)
@@ -1014,7 +1014,6 @@ export default {
           }
 
           if (halfBound % 2 == 0) {
-            // console.log(parseInt(halfBound / 2))
             var a = this.$data.insights[attr.code].values[parseInt(halfBound / 2)].value
             var b = this.$data.insights[attr.code].values[parseInt(halfBound / 2) - 1].value
             q1Value = (a + b) / 2
