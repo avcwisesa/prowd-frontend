@@ -912,7 +912,7 @@ export default {
           completenessScore /= this.attributeCodes.length
 
           this.$data.insights.completenessScore.push({
-            name: value1 + "-" + value2,
+            name: `${layer.key}-${value1}-${value2}`,
             score: completenessScore
           })
 
