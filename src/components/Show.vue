@@ -1,5 +1,6 @@
 <!-- eslint-disable vue/no-use-v-if-with-v-for,vue/no-confusing-v-for-v-if -->
 <template>
+  <v-container fluid>
   <v-layout column justify-center align-center>
     <!-- {{ entities }} -->
     <v-flex xs12>
@@ -107,7 +108,8 @@
       <v-card>
         <v-card-title class="headline mt-3"> Attribute Completeness Score </v-card-title>
         <v-card-text class="text-xs-left">Degree of completeness for attributes of interest</v-card-text>
-        <v-layout row align-center justify-space-around>
+        <v-layout row align-content-center class="horiz-scroll">
+          <v-flex xs3></v-flex>
           <v-flex class="px-3 mx-5" xs3 v-for="attr in attributes" v-bind:key="attr.code">
             <v-layout align-center justify-center column fill-height>
             <v-flex xs12>
@@ -159,6 +161,7 @@
       </v-card>
     </v-flex>
   </v-layout>
+  </v-container>
 </template>
 
 <script>
@@ -431,3 +434,21 @@ export default {
   }
 }
 </script>
+
+<style>
+#app {
+  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: #2c3e50;
+  margin-top: 60px;
+}
+.overflow-hidden {
+  overflow: hidden;
+}
+.horiz-scroll {
+  overflow-y: hidden;
+  overflow-x: auto;
+}
+</style>

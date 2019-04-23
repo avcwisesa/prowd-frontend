@@ -129,7 +129,7 @@
         <v-card-text>Degree of completeness for attributes of interest</v-card-text>
 
         <h2 class="ml-4 my-3">Profile 1</h2>
-        <v-layout row align-center justify-space-around>
+        <v-layout row align-content-center class="horiz-scroll">
           <v-flex class="px-3 mx-5 mt-2" xs3 v-for="attr in attributes" v-bind:key="attr.code">
             <v-layout align-center justify-center column fill-height>
               <v-flex xs12>
@@ -156,7 +156,7 @@
 
         <v-divider class="my-4"></v-divider>
         <h2 class="ml-4 mb-3">Profile 2</h2>
-        <v-layout row align-center justify-space-around>
+        <v-layout row align-content-center class="horiz-scroll">
           <v-flex class="px-3 mx-5 my-3" xs3 v-for="attr in attributes2" v-bind:key="attr.code">
             <v-layout align-center justify-center column fill-height>
               <v-flex xs12>
@@ -573,3 +573,21 @@ export default {
   }
 }
 </script>
+
+<style>
+#app {
+  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: #2c3e50;
+  margin-top: 60px;
+}
+.overflow-hidden {
+  overflow: hidden;
+}
+.horiz-scroll {
+  overflow-y: hidden;
+  overflow-x: auto;
+}
+</style>
