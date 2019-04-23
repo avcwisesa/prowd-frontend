@@ -341,7 +341,7 @@ export default {
       })
 
       return attributes.sort(function (a, b) {
-        return a.count - b.count
+        return a.name.localeCompare(b.name)
       })
     },
     attributes2 () {
@@ -367,7 +367,7 @@ export default {
       })
 
       return attributes.sort(function (a, b) {
-        return a.count - b.count
+        return a.name.localeCompare(b.name)
       })
       // return this.$store.state.attributes.slice()
     },
