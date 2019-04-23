@@ -4,7 +4,6 @@
   <v-layout column justify-center align-center>
     <!-- {{ entities }} -->
     <v-flex xs12>
-      <v-card>
         <h1 class="ml-3 pt-4"> {{profileName}} </h1>
         <v-card-text>
           <div class="bar-chart">
@@ -100,16 +99,14 @@
           </v-layout>
 
         </v-card-text>
-      </v-card>
     </v-flex>
     <v-flex xs12>
     </v-flex>
     <v-flex xs12>
-      <v-card>
+      <!-- <v-card> -->
         <v-card-title class="headline mt-3"> Attribute Completeness Score </v-card-title>
         <v-card-text class="text-xs-left">Degree of completeness for attributes of interest</v-card-text>
         <v-layout row align-content-center class="horiz-scroll">
-          <v-flex xs3></v-flex>
           <v-flex class="px-3 mx-5" xs3 v-for="attr in attributes" v-bind:key="attr.code">
             <v-layout align-center justify-center column fill-height>
             <v-flex xs12>
@@ -134,7 +131,7 @@
           </v-flex>
         </v-layout>
         <v-card-title class="headline mt-3"> Completeness table </v-card-title>
-        <v-card-text class="text-xs-center">Completeness details of all entities within the profile</v-card-text>
+        <v-card-text class="text-xs-left">Completeness details of all entities within the profile</v-card-text>
         <v-data-table
           :headers="headers"
           :items="entities"
@@ -158,7 +155,7 @@
             <td class="text-xs-center">{{ (props.item.score).toFixed(2)+'%' }}</td>
           </template>
         </v-data-table>
-      </v-card>
+      <!-- </v-card> -->
     </v-flex>
   </v-layout>
   </v-container>
@@ -170,7 +167,7 @@ import BarChart from '@/components/BarChart.vue'
 
 export default {
   async created () {
-    console.log(this)
+    // console.log(this)
     var store = this.$store
     var router = this.$router.history.current
     await Promise.all([
@@ -271,8 +268,9 @@ export default {
         attr.score = (100 * attr.count / entities.length)
       })
 
+      console.log(attributes)
       return attributes.sort(function (a, b) {
-        return a.count - b.count
+        return a.name.localeCompare(b.name)
       })
     },
     profileName () {
@@ -343,7 +341,7 @@ export default {
           LIMIT 10000
         }
       `
-      console.log(query)
+      // console.log(query)
       this.$axios.post("https://query.wikidata.org/" + 'sparql?query=' + encodeURIComponent(query))
         .then((response) => {
           var entities = response.data.results.bindings
@@ -364,7 +362,7 @@ export default {
           chartData.forEach(function (val, i) {
             var weight = (i + 1) * div
             score += (weight * val)
-            console.log(weight, val)
+            // console.log(weight, val)
           })
           score /= entities.length
           this.$store.commit('SET_SCORE1', parseFloat(score.toFixed(2)))

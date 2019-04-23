@@ -5,7 +5,7 @@
       <div class="text-xs-center">
         <!-- <img src="/v.png" alt="Vuetify.js" class="mb-5" /> -->
       </div>
-      <v-card>
+      <!-- <v-card> -->
         <v-card-title class="headline"> {{profileName}} Profile Comparison </v-card-title>
         <v-card-text>
           <div class="bar-chart">
@@ -121,15 +121,16 @@
           </v-layout>
 
         </v-card-text>
-      </v-card>
+      <!-- </v-card> -->
     </v-flex>
     <v-flex xs12>
-      <v-card>
+      <!-- <v-card> -->
         <v-card-title class="headline mt-3"> Attribute Completeness Score </v-card-title>
-        <v-card-text>Degree of completeness for attributes of interest</v-card-text>
+        <v-card-text class="text-xs-left">Degree of completeness for attributes of interest</v-card-text>
 
-        <h2 class="ml-4 my-3">Profile 1</h2>
-        <v-layout row align-content-center class="horiz-scroll">
+        <v-layout column align-content-center class="horiz-scroll">
+          <h2 class="ml-4 my-3">Profile 1</h2>
+          <v-layout row>
           <v-flex class="px-3 mx-5 mt-2" xs3 v-for="attr in attributes" v-bind:key="attr.code">
             <v-layout align-center justify-center column fill-height>
               <v-flex xs12>
@@ -151,12 +152,11 @@
                 <h3 class="text-xs-center">Entities with this attribute: {{ attr.count }}</h3>
               </v-flex>
             </v-layout>
+          
           </v-flex>
-        </v-layout>
-
-        <v-divider class="my-4"></v-divider>
-        <h2 class="ml-4 mb-3">Profile 2</h2>
-        <v-layout row align-content-center class="horiz-scroll">
+          </v-layout>
+          <h2 class="ml-4 my-3">Profile 2</h2>
+          <v-layout row>
           <v-flex class="px-3 mx-5 my-3" xs3 v-for="attr in attributes2" v-bind:key="attr.code">
             <v-layout align-center justify-center column fill-height>
               <v-flex xs12>
@@ -179,18 +179,16 @@
               </v-flex>
             </v-layout>
           </v-flex>
+          </v-layout>
         </v-layout>
-      </v-card>
+      <!-- </v-card> -->
     </v-flex>
     <v-flex xs12>
-      <v-card>
-        <v-card-title class="headline mt-3"> Completeness table </v-card-title>
-          <v-card-text>Completeness details of all entities within the profile</v-card-text>
+      <!-- <v-card> -->
+        <v-card-title class="display-1 mt-3"> Completeness table </v-card-title>
+          <v-card-text class="text-xs-left">Completeness details of all entities within the profile</v-card-text>
 
-          <v-expansion-panel popout expand>
-            <v-expansion-panel-content class="px-3 pb-3">
-              <div slot="header">Profile 1</div>
-              <v-card>
+              <div class="headline ml-3 my-2 text-xs-left">Profile 1</div>
                 <v-data-table
                   :headers="headers"
                   :items="entities1"
@@ -213,12 +211,8 @@
                     <td class="text-xs-center">{{ (props.item.score).toFixed(2)+'%' }}</td>
                   </template>
                 </v-data-table>
-              </v-card>
-            </v-expansion-panel-content>
 
-            <v-expansion-panel-content class="px-3 pb-3">
-              <div slot="header">Profile 2</div>
-              <v-card>
+              <div class="headline ml-3 my-3 text-xs-left">Profile 2</div>
                 <v-data-table
                   :headers="headers"
                   :items="entities2"
@@ -241,10 +235,6 @@
                     <td class="text-xs-center">{{ (props.item.score).toFixed(2)+'%' }}</td>
                   </template>
                 </v-data-table>
-              </v-card>
-            </v-expansion-panel-content>
-          </v-expansion-panel>
-      </v-card>
     </v-flex>
   </v-layout>
 </template>
@@ -351,7 +341,7 @@ export default {
       })
 
       return attributes.sort(function (a, b) {
-        return a.count - b.count
+        return a.name.localeCompare(b.name)
       })
     },
     attributes2 () {
@@ -377,7 +367,7 @@ export default {
       })
 
       return attributes.sort(function (a, b) {
-        return a.count - b.count
+        return a.name.localeCompare(b.name)
       })
       // return this.$store.state.attributes.slice()
     },
