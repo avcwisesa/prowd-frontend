@@ -192,7 +192,7 @@
               <v-flex xs4 v-for="f2value in f2vv[f1value]" v-bind:key="f2value">
                 <div class="pos-relative">
                   <v-tooltip top>
-                    <v-card-title slot="activator" class="headline">{{ truncateString(23)(f2value) }}</v-card-title>
+                    <v-card-title slot="activator" class="headline">{{ truncateString(20)(f2value) }}</v-card-title>
                     <span>{{ f2value }}</span>
                   </v-tooltip>
                   <v-card-text :id="`${f1value}-${f2value}-amount`"></v-card-text>
@@ -231,11 +231,11 @@
               <v-flex xs4 v-for="f2value in d3f2vv[layer][f1value]" v-bind:key="f2value">
                 <div class="pos-relative">
                   <v-tooltip top>
-                    <v-card-title slot="activator" class="headline">{{ truncateString(23)(f2value) }}</v-card-title>
+                    <v-card-title slot="activator" class="headline">{{ truncateString(20)(f2value) }}</v-card-title>
                     <span>{{ f2value }}</span>
                   </v-tooltip>
                   <v-card-text :id="`${layer}-${f1value}-${f2value}-amount`"></v-card-text>
-                  <canvas :id="`${layer}-${f1value}-${f2value}`"></canvas>
+                  <canvas class="chart" :id="`${layer}-${f1value}-${f2value}`"></canvas>
                 </div>
               </v-flex>
             </v-layout>
@@ -863,78 +863,79 @@ export default {
       this.$data.insights.completenessScore.low = this.$data.insights.completenessScore.slice(-3).reverse()
     },
     d3Processing (dataset) {
+      this.$forceUpdate()
       this.$data.insights.completenessScore = []
       // console.log(this.$data.d3f1v)
       // console.log(this.$data.layer)
 
       this.$data.layerValues.forEach((layer) => {
         this.$data.d3f1v[layer.key].forEach((value1) => {
-
-        this.$data.d3f2vv[layer.key][value1].forEach((value2) => {
-          if (typeof dataset[layer.key][value1][value2] == 'undefined') {
-            return
-          }
-          var chartData = {
-            labels: this.attributeNames,
-            datasets: []
-          }
-
-          var completenessScore = 0
-          var data = []
-          var subset = dataset[layer.key][value1][value2]
-          var size = subset.length
-
-          this.$data.amount[`${layer.key}-${value1}-${value2}`] = size
-
-          if (size == 0) {
-            return
-          }
-
-          this.attributeCodes.forEach((attribute) => {
-            var sum = subset.reduce((acc, entity) => {
-              var attributeExists = entity[attribute + 'Label'] || 'none'
-              if (attributeExists == 'none') {
-                return acc
-              } else {
-                return acc + 1
-              }
-            }, 0)
-            var percentage = Number.parseFloat(sum / size * 100)
-
-            completenessScore += percentage
-
-            this.$data.insights[attribute].values.push({
-              name: `${layer.key}-${value1}-${value2}`,
-              facet1: value1,
-              facet2: value2,
-              value: percentage
-            })
-            data.push(percentage.toFixed(2))
-          })
-
-          completenessScore /= this.attributeCodes.length
-
-          this.$data.insights.completenessScore.push({
-            name: `${layer.key}-${value1}-${value2}`,
-            score: completenessScore
-          })
-
-          chartData.datasets.push({
-            label: 'Average Completeness',
-            backgroundColor: '#41b883',
-            data: data
-          })
-
-          this.$nextTick(() => {
-            const ctx = document.getElementById(`${layer.key}-${value1}-${value2}-amount`)
-            console.log(`${layer.key}-${value1}-${value2}`)
-            console.log(ctx)
-            if (ctx) {
-              ctx.innerText = this.defaultAmountText + size
-              this.createChart(`${layer.key}-${value1}-${value2}`, chartData)
+          this.$data.d3f2vv[layer.key][value1].forEach((value2) => {
+            if (typeof dataset[layer.key][value1][value2] == 'undefined') {
+              return
             }
+            var chartData = {
+              labels: this.attributeNames,
+              datasets: []
+            }
+
+            var completenessScore = 0
+            var data = []
+            var subset = dataset[layer.key][value1][value2]
+            var size = subset.length
+
+            this.$data.amount[`${layer.key}-${value1}-${value2}`] = size
+
+            if (size == 0) {
+              return
+            }
+
+            this.attributeCodes.forEach((attribute) => {
+              var sum = subset.reduce((acc, entity) => {
+                var attributeExists = entity[attribute + 'Label'] || 'none'
+                if (attributeExists == 'none') {
+                  return acc
+                } else {
+                  return acc + 1
+                }
+              }, 0)
+              var percentage = Number.parseFloat(sum / size * 100)
+
+              completenessScore += percentage
+
+              this.$data.insights[attribute].values.push({
+                name: `${layer.key}-${value1}-${value2}`,
+                facet1: value1,
+                facet2: value2,
+                value: percentage
+              })
+              data.push(percentage.toFixed(2))
+            })
+
+            completenessScore /= this.attributeCodes.length
+
+            this.$data.insights.completenessScore.push({
+              name: `${layer.key}-${value1}-${value2}`,
+              score: completenessScore
+            })
+
+            chartData.datasets.push({
+              label: 'Average Completeness',
+              backgroundColor: '#41b883',
+              data: data
+            })
+
+            this.$nextTick(() => {
+              const ctx = document.getElementById(`${layer.key}-${value1}-${value2}-amount`)
+              // console.log(`${layer.key}-${value1}-${value2}`)
+              // console.log(ctx)
+              // console.log(chartData)
+              if (ctx && layer.key == this.$data.layer) {
+                ctx.innerText = this.defaultAmountText + size
+                this.createChart3D(this.$data.layerValues, [layer.key,value1,value2], chartData)
+              }
+            })
           })
-        })
       })
       })
 
@@ -943,10 +944,27 @@ export default {
       this.$data.insights.completenessScore.high = this.$data.insights.completenessScore.slice(0, 3)
       this.$data.insights.completenessScore.low = this.$data.insights.completenessScore.slice(-3).reverse()
     },
+    createChart3D (layers, facets, chartData) {
+      layers.forEach(layer => {
+        if (window[`${layer.key}-${facets[1]}-${facets[2]}-chart`] != undefined) {
+          window[`${layer.key}-${facets[1]}-${facets[2]}-chart`].destroy()
+        }
+      })
+
+      const ctx = document.getElementById(`${facets[0]}-${facets[1]}-${facets[2]}`).getContext('2d')
+      window[`${facets[0]}-${facets[1]}-${facets[2]}-chart`] = new Chart(ctx, {
+        type: 'bar',
+        data: chartData,
+        options: this.$data.options,
+      })
+    },
     createChart (chartId, chartData) {
-      // console.log(chartData)
-      const ctx = document.getElementById(chartId)
-      new Chart(ctx, {
+      const ctx = document.getElementById(chartId).getContext('2d')
+      if (window[`${chartId}-chart`] != undefined) {
+        console.log(window[`${chartId}-chart`])
+        window[`${chartId}-chart`].destroy()
+      }
+      window[`${chartId}-chart`] = new Chart(ctx, {
         type: 'bar',
         data: chartData,
         options: this.$data.options,
