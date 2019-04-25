@@ -49,7 +49,6 @@
                 <v-flex xs12>
                   <h3 class="text-xs-center"> &nbsp; &nbsp;Average Completeness Score</h3>
                 </v-flex>
-                <v-flex xs3></v-flex>
                 <v-flex x5>
                   <v-progress-circular class="text-xs-center"
                     :size="200"
@@ -110,38 +109,52 @@
           <v-flex class="px-3 mx-5" xs3 v-for="attr in attributes" v-bind:key="attr.code">
             <v-layout align-center justify-center column fill-height>
             <v-flex xs12>
-              <h3 class="text-xs-center">{{attr.name}} ({{attr.code}})</h3>
+              <v-tooltip top>
+                <h3 slot="activator" class="text-xs-center">{{ truncateString(15)(`${attr.name} (${attr.code})`)}}</h3>
+                <span>{{ `${attr.name} (${attr.code})` }}</span>
+              </v-tooltip>
             </v-flex>
-            <v-flex xs12></v-flex>
-            <v-flex >
+            <v-flex class="my-2">
               <v-progress-circular
-                :size="200"
-                :width="25"
+                :size="130"
+                :width="15"
                 :rotate="-90"
                 :value="attr.score"
                 :color="getColor(attr.score)"
               >
-                <h1> {{ (attr.score).toFixed(2) }}% </h1>
+                <h2> {{ (attr.score).toFixed(2) }}% </h2>
               </v-progress-circular>
             </v-flex>
-            <v-flex xs12 class="mx-5">
-              <h3 class="text-xs-center">Entities with this attribute: {{ attr.count }}</h3>
+            <v-flex xs12 class="mx-3">
+              <h3 class="text-xs-center">{{ attr.count }} Entities</h3>
             </v-flex>
           </v-layout>
           </v-flex>
         </v-layout>
-        <v-card-title class="headline mt-3"> Completeness table </v-card-title>
+        <v-card class="mt-4">
+        <v-card-title class="headline mt-3">
+          Completeness table
+          <v-spacer></v-spacer>
+          <v-text-field
+            v-model="search"
+            append-icon="search"
+            label="Search"
+            single-line
+            hide-details
+          ></v-text-field>
+        </v-card-title>
         <v-card-text class="text-xs-left">Completeness details of all entities within the profile</v-card-text>
         <v-data-table
           :headers="headers"
           :items="entities"
+          :search="search"
           class="elevation-1"
           :pagination.sync="pagination"
         >
           <template slot="items" slot-scope="props">
             <td v-for="attr in attributeVariables" v-bind:key="attr.code" v-if="props.item[attr]" class="text-xs-center">
               <div v-if="attr === 'classLabel'">
-                <a v-bind:href="props.item['class'].value">
+                <a v-bind:href="props.item['class'].value" target="_blank">
                   <v-icon>link</v-icon>
                 </a>
                 {{props.item[attr]}}
@@ -155,7 +168,7 @@
             <td class="text-xs-center">{{ (props.item.score).toFixed(2)+'%' }}</td>
           </template>
         </v-data-table>
-      <!-- </v-card> -->
+      </v-card>
     </v-flex>
   </v-layout>
   </v-container>
@@ -184,6 +197,7 @@ export default {
   },
   data () {
     return {
+      search: '',
       pagination: {
         rowsPerPage: 10
       },
@@ -295,6 +309,11 @@ export default {
       var green = i < 50 ? 180.0 / 100 * (i * 2) : 180;
 
       return `rgb(${red},${green},0)`
+    },
+    truncateString (len) {
+      return str => {
+        return str.length > len ? str.substring(0, len - 3) + "..." : str.substring(0, len)
+      }
     },
     postQuery () {
       this.loading = true
