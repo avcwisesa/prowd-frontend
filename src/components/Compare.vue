@@ -46,7 +46,6 @@
                 <v-flex xs12>
                   <h3 class="text-xs-center"> &nbsp; &nbsp;Average Completeness Score</h3>
                 </v-flex>
-                <v-flex xs3></v-flex>
                 <v-flex x5>
                   <v-progress-circular class="text-xs-center"
                     :size="200"
@@ -84,7 +83,6 @@
                 <v-flex xs12>
                   <h3 class="text-xs-center"> &nbsp; &nbsp;Average Completeness Score</h3>
                 </v-flex>
-                <v-flex xs3></v-flex>
                 <v-flex x5>
                   <v-progress-circular class="text-xs-center"
                     :size="200"
@@ -135,7 +133,7 @@
             <v-layout align-center justify-center column fill-height>
               <v-flex xs12>
                 <v-tooltip top>
-                  <h3 class="text-xs-center">{{ truncateString(15)(`${attr.name} (${attr.code})`)}}</h3>
+                  <h3 slot="activator" class="text-xs-center">{{ truncateString(15)(`${attr.name} (${attr.code})`)}}</h3>
                   <span>{{ `${attr.name} (${attr.code})` }}</span>
                 </v-tooltip>
               </v-flex>
@@ -162,7 +160,7 @@
             <v-layout align-center justify-center column fill-height>
               <v-flex xs12>
                 <v-tooltip top>
-                  <h3 class="text-xs-center">{{ truncateString(15)(`${attr.name} (${attr.code})`)}}</h3>
+                  <h3 slot="activator" class="text-xs-center">{{ truncateString(15)(`${attr.name} (${attr.code})`)}}</h3>
                   <span>{{ `${attr.name} (${attr.code})` }}</span>
                 </v-tooltip>
               </v-flex>
@@ -190,18 +188,28 @@
       <!-- <v-card> -->
         <v-card-title class="display-1 mt-3"> Completeness table </v-card-title>
           <v-card-text class="text-xs-left">Completeness details of all entities within the profile</v-card-text>
-
-              <div class="headline ml-3 my-2 text-xs-left">Profile 1</div>
+              <v-card-title class="headline ml-3 my-2 text-xs-left">
+                Profile 1
+                <v-spacer></v-spacer>
+                <v-text-field
+                  v-model="search[0]"
+                  append-icon="search"
+                  label="Search"
+                  single-line
+                  hide-details
+                ></v-text-field>
+              </v-card-title>
                 <v-data-table
                   :headers="headers"
                   :items="entities1"
+                  :search="search[0]"
                   :pagination.sync="pagination"
                   class="elevation-1"
                 >
                   <template slot="items" slot-scope="props">
                     <td v-for="attr in attributeVariables" v-bind:key="attr.code" v-if="props.item[attr]" class="text-xs-center">
                       <div v-if="attr === 'classLabel'">
-                        <a v-bind:href="props.item['class'].value">
+                        <a v-bind:href="props.item['class'].value" target="_blank">
                           <v-icon>link</v-icon>
                         </a>
                         {{props.item[attr]}}
@@ -215,17 +223,28 @@
                   </template>
                 </v-data-table>
 
-              <div class="headline ml-3 my-3 text-xs-left">Profile 2</div>
+              <v-card-title class="headline ml-3 my-2 text-xs-left">
+                Profile 2
+                <v-spacer></v-spacer>
+                <v-text-field
+                  v-model="search[1]"
+                  append-icon="search"
+                  label="Search"
+                  single-line
+                  hide-details
+                ></v-text-field>
+              </v-card-title>
                 <v-data-table
                   :headers="headers"
                   :items="entities2"
+                  :search="search[1]"
                   :pagination.sync="pagination"
                   class="elevation-1"
                 >
                   <template slot="items" slot-scope="props">
                     <td v-for="attr in attributeVariables" v-bind:key="attr.code" v-if="props.item[attr]" class="text-xs-center">
                       <div v-if="attr === 'classLabel'">
-                        <a v-bind:href="props.item['class'].value">
+                        <a v-bind:href="props.item['class'].value" target="_blank">
                           <v-icon>link</v-icon>
                         </a>
                         {{props.item[attr]}}
@@ -266,6 +285,7 @@ export default {
   },
   data () {
     return {
+      search: ['', ''],
       pagination: {
         rowsPerPage: 10
       },
