@@ -33,9 +33,9 @@
                   v-for="(action, i) in items"
                   :key="i"
                   @click="action.func(props.item.ID)"
-                  :class="action.color+'--text text--darken-1 '"
+                  :class="action.color+'--text text--darken-1'"
                 >
-                  <v-list-tile-title >
+                  <v-list-tile-title class="caption">
                     {{ action.title }}
                   </v-list-tile-title>
                 </v-list-tile>
@@ -77,10 +77,10 @@ export default {
         { text: 'Action', sortable: false, align: 'center' }
       ],
       items: [
-        { title: 'SEE PROFILE', func: this.goTo, color: 'primary'},
-        { title: 'COMPARE', func: this.compare, color: 'blue'},
-        { title: 'MDA', func: this.mda, color: 'accent'},
-        { title: 'EDIT', func: this.details, color: 'brown'}
+        { title: 'SEE FULL PROFILE', func: this.goTo, color: 'primary'},
+        { title: 'COMPARE TWO FACET VALUES', func: this.compare, color: 'blue'},
+        { title: 'MULTIDIMENSIONAL ANALYSIS', func: this.mda, color: 'accent'},
+        { title: 'EDIT PROFILE', func: this.details, color: 'brown'}
       ],
       pagination: {
         rowsPerPage: 10
@@ -96,7 +96,8 @@ export default {
   methods: {
     prettyDate (dateStr) {
       let date = new Date(dateStr)
-      return date.toUTCString()
+      let str = date.toUTCString()
+      return `${str.substring(4, str.length - 7)} ${str.substring(str.length - 3)}`
     },
     goTo (ID) {
       this.$router.push({'path': '/profile/' + ID})
