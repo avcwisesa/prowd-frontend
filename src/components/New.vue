@@ -21,6 +21,14 @@
                     class="input-group--focused"
                 ></v-text-field>
             </v-flex>
+            <v-flex xs3>
+                <v-subheader><h3>Description</h3></v-subheader>
+            </v-flex>
+            <v-flex xs7>
+                <v-textarea v-model=description required
+                    class="input-group--focused"
+                ></v-textarea>
+            </v-flex>
             <v-flex xs12>
               <v-layout row>
                 <v-flex xs3>
@@ -239,6 +247,7 @@ export default {
       API_ENDPOINT: 'http://prowd.id:8080',
       profileName: '',
       author: '',
+      description: '',
       profileClass: { label: 'Empty', id: 'undefined', description: '-' },
       facets: [],
       attributes: [],
@@ -258,6 +267,7 @@ export default {
       return {
         name: this.profileName,
         author: this.author,
+        description: this.description,
         class: JSON.stringify({ code: this.profileClass['id'], name: this.profileClass['label'] }),
         facets: JSON.stringify(this.facets.map(obj => {
           return {
