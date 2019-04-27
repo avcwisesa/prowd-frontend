@@ -110,10 +110,10 @@
             </v-flex>
             <v-flex xs12>
               <v-alert
-                v-model=warning outline dismissible
+                v-model=warning dismissible
                 type="warning"
               >
-                Current version of the app only support up to 20.000 entities
+                Current version of the app only support up to 10.000 entities
               </v-alert>
             </v-flex>
           </v-layout>
@@ -493,7 +493,7 @@ export default {
         ${filterExistQuery}
         SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
         }
-        LIMIT 20000
+        LIMIT 10000
       `
       console.log(query)
       return this.$axios.post("https://query.wikidata.org/" + 'sparql?query=' + encodeURIComponent(query))
@@ -586,7 +586,7 @@ export default {
       }
       this.loading = false
 
-      this.warning = (this.entities1.length === 20000 || this.entities2.length === 20000)
+      this.warning = (this.entities1.length === 10000 || this.entities2.length === 10000)
     }
   }
 }
