@@ -8,6 +8,10 @@
           <v-text-field v-model=profileName required
               class="input-group--focused"
           ></v-text-field>
+          <h2>Description</h2>
+          <v-textarea v-model=description required
+              class="input-group--focused"
+          ></v-textarea>
           <h2>Class:</h2>
           <h2 class="black--text mt-3">{{ profileClass.name }} ({{ profileClass.code }})</h2>
           <v-card-text> {{ profileClass['description'] }} </v-card-text>
@@ -280,6 +284,7 @@ export default {
     return {
       API_ENDPOINT: process.env.API_ENDPOINT,
       profileName: 'Anonymous',
+      description: 'No description',
       profileClass: { label: 'Empty', id: 'undefined', description: '-' },
       currClass: null,
       currFacet: '',
@@ -300,6 +305,7 @@ export default {
     newProfile () {
       return {
         name: this.profileName,
+        description: this.description,
         class: JSON.stringify({ code: this.profileClass.code, name: this.profileClass.name }),
         filters: JSON.stringify(this.filters.map(obj => {
           return {

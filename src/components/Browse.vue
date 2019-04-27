@@ -11,7 +11,7 @@
           <td class="text-xs-left" v-if="props.item.author == ''"> anonymous </td>
           <td class="text-xs-left" v-else> {{ props.item.author }} </td>
           <td class="text-xs-left" v-if="props.item.description == ''"> No description </td>
-          <td class="text-xs-left" v-else> {{ props.item.description }} </td>
+          <td class="text-xs-left" v-else> {{ truncateString(60)(props.item.description) }} </td>
           <td>{{ prettyDate(props.item.CreatedAt) }}</td>
           <td>{{ prettyDate(props.item.UpdatedAt) }}</td>
           <td>
@@ -116,6 +116,11 @@ export default {
     },
     details (ID) {
       this.$router.push({'path': '/profile/details/' + ID})
+    },
+    truncateString (len) {
+      return str => {
+        return str.length > len ? str.substring(0, len - 3) + "..." : str.substring(0, len)
+      }
     }
   }
 }
