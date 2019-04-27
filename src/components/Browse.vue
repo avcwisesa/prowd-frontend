@@ -10,6 +10,8 @@
           <td class="text-xs-left">{{ props.item.name }}</td>
           <td class="text-xs-left" v-if="props.item.author == ''"> anonymous </td>
           <td class="text-xs-left" v-else> {{ props.item.author }} </td>
+          <td class="text-xs-left" v-if="props.item.description == ''"> No description </td>
+          <td class="text-xs-left" v-else> {{ props.item.description }} </td>
           <td>{{ prettyDate(props.item.CreatedAt) }}</td>
           <td>{{ prettyDate(props.item.UpdatedAt) }}</td>
           <td>
@@ -67,11 +69,12 @@ export default {
       datacollection: null,
       headers: [
         {
-          text: 'Profile Title',
+          text: 'Profile Name',
           align: 'left',
           value: 'name'
         },
-        { text: 'Created By', value: 'author' },
+        { text: 'Author', value: 'author' },
+        { text: 'Description', value: 'description' },
         { text: 'Created At', value: 'CreatedAt', align: 'center' },
         { text: 'Last Modified At', value: 'UpdatedAt', align: 'center' },
         { text: 'Action', sortable: false, align: 'center' }
