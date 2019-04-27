@@ -89,10 +89,10 @@
             </v-flex>
             <v-flex xs12>
               <v-alert
-                v-model=warning outline dismissible
+                v-model=warning dismissible
                 type="warning"
               >
-                Current version of the app only support up to 5.000 entities
+                Current version of the app only supports up to 10000 entities
               </v-alert>
             </v-flex>
           </v-layout>
@@ -398,7 +398,7 @@ export default {
           }
 
           this.loading = false
-          this.warning = (this.entities.length === 20000)
+          this.warning = (this.entities.length === 10000)
         })
         .catch((error) => {
           console.log(error)

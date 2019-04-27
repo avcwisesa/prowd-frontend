@@ -192,10 +192,9 @@
               <v-flex xs4 v-for="f2value in f2vv[f1value]" v-bind:key="f2value">
                 <div class="pos-relative">
                   <v-tooltip top>
-                    <v-card-title slot="activator" class="headline">{{ truncateString(20)(f2value) }}</v-card-title>
+                    <v-card-title slot="activator" class="headline">{{ truncateString(16)(f2value) }} ({{ amount[`${f1value}-${f2value}`] }})</v-card-title>
                     <span>{{ f2value }}</span>
                   </v-tooltip>
-                  <v-card-text :id="`${f1value}-${f2value}-amount`"></v-card-text>
                   <canvas :id="`${f1value}-${f2value}`"></canvas>
                 </div>
               </v-flex>
@@ -231,10 +230,9 @@
               <v-flex xs4 v-for="f2value in d3f2vv[layer][f1value]" v-bind:key="f2value">
                 <div class="pos-relative">
                   <v-tooltip top>
-                    <v-card-title slot="activator" class="headline">{{ truncateString(20)(f2value) }}</v-card-title>
+                    <v-card-title slot="activator" class="headline">{{ truncateString(16)(f2value) }} ({{ amount[`${layer}-${f1value}-${f2value}`] }})</v-card-title>
                     <span>{{ f2value }}</span>
                   </v-tooltip>
-                  <v-card-text :id="`${layer}-${f1value}-${f2value}-amount`"></v-card-text>
                   <canvas class="chart" :id="`${layer}-${f1value}-${f2value}`"></canvas>
                 </div>
               </v-flex>
@@ -281,7 +279,6 @@ export default {
             low: []
           }
         },
-        defaultAmountText: "Amount of entities in this facet: ",
         dimension: 2,
         selectedFacet: [],
         enableNone: false,
@@ -848,9 +845,8 @@ export default {
           })
 
           this.$nextTick(() => {
-            const ctx = document.getElementById(`${value1}-${value2}-amount`)
+            const ctx = document.getElementById(`${value1}-${value2}`)
             if (ctx) {
-              ctx.innerText = this.defaultAmountText + size
               this.createChart(`${value1}-${value2}`, chartData)
             }
           })
@@ -926,12 +922,11 @@ export default {
             })
 
             this.$nextTick(() => {
-              const ctx = document.getElementById(`${layer.key}-${value1}-${value2}-amount`)
+              const ctx = document.getElementById(`${layer.key}-${value1}-${value2}`)
               // console.log(`${layer.key}-${value1}-${value2}`)
               // console.log(ctx)
               // console.log(chartData)
               if (ctx && layer.key == this.$data.layer) {
-                ctx.innerText = this.defaultAmountText + size
                 this.createChart3D(this.$data.layerValues, [layer.key,value1,value2], chartData)
               }
             })
