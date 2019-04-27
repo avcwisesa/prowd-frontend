@@ -92,7 +92,7 @@
                 v-model=warning dismissible
                 type="warning"
               >
-                Current version of the app only support up to 10.000 entities
+                Current version of the app only supports up to 10000 entities
               </v-alert>
             </v-flex>
           </v-layout>
