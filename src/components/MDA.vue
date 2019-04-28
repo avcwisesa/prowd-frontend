@@ -184,7 +184,7 @@
       <div v-for="f1value in f1values" v-bind:key=f1value class="mt-3">
         <v-flex xs12>
           <v-card class="px-1 pb-1">
-            <v-card-title class="headline">{{f1value}} ({{amount[f1value]}})</v-card-title>
+            <v-card-title class="title">{{f1value}} ({{amount[f1value]}})</v-card-title>
             <div v-if="dimension == 1" class="chart-container" >
               <canvas :id="f1value"></canvas>
             </div>
@@ -192,10 +192,10 @@
               <v-flex xs4 v-for="f2value in f2vv[f1value]" v-bind:key="f2value">
                 <div class="pos-relative">
                   <v-tooltip top>
-                    <v-card-title slot="activator" class="headline">{{ truncateString(16)(f2value) }} ({{ amount[`${f1value}-${f2value}`] }})</v-card-title>
+                    <v-card-title slot="activator" class="title">{{ truncateString(20)(f2value) }} ({{ amount[`${f1value}-${f2value}`] }})</v-card-title>
                     <span>{{ f2value }}</span>
                   </v-tooltip>
-                  <canvas :id="`${f1value}-${f2value}`"></canvas>
+                  <canvas :height="250" :id="`${f1value}-${f2value}`"></canvas>
                 </div>
               </v-flex>
             </v-layout>
@@ -225,15 +225,15 @@
       <div v-for="f1value in d3f1v[layer]" v-bind:key=f1value class="mt-3">
         <v-flex xs12>
           <v-card class="px-1 pb-1">
-            <v-card-title class="headline">{{f1value}} ({{amount[`${layer}-${f1value}`]}})</v-card-title>
+            <v-card-title class="title">{{f1value}} ({{amount[`${layer}-${f1value}`]}})</v-card-title>
             <v-layout row align-content-center class="horiz-scroll">
               <v-flex xs4 v-for="f2value in d3f2vv[layer][f1value]" v-bind:key="f2value">
                 <div class="pos-relative">
                   <v-tooltip top>
-                    <v-card-title slot="activator" class="headline">{{ truncateString(16)(f2value) }} ({{ amount[`${layer}-${f1value}-${f2value}`] }})</v-card-title>
+                    <v-card-title slot="activator" class="title">{{ truncateString(20)(f2value) }} ({{ amount[`${layer}-${f1value}-${f2value}`] }})</v-card-title>
                     <span>{{ f2value }}</span>
                   </v-tooltip>
-                  <canvas class="chart" :id="`${layer}-${f1value}-${f2value}`"></canvas>
+                  <canvas class="chart" :height="250" :id="`${layer}-${f1value}-${f2value}`"></canvas>
                 </div>
               </v-flex>
             </v-layout>
