@@ -52,7 +52,7 @@
                     :width="25"
                     :rotate="-90"
                     :value="score1"
-                    color=blue
+                    color=#007fff
                   >
                     <h1> {{ score1 }}% </h1>
                   </v-progress-circular>
@@ -129,11 +129,11 @@
         <v-layout column align-content-center class="horiz-scroll">
           <h2 class="ml-4 my-3">Profile 1</h2>
           <v-layout row>
-          <v-flex class="px-3 mx-5 mt-2" xs3 v-for="attr in attributes" v-bind:key="attr.code">
+          <v-flex class="px-3 mx-5" xs3 v-for="attr in attributes" v-bind:key="attr.code">
             <v-layout align-center justify-center column fill-height>
               <v-flex xs12>
                 <v-tooltip top>
-                  <h3 slot="activator" class="text-xs-center">{{ truncateString(15)(`${attr.name} (${attr.code})`)}}</h3>
+                  <span slot="activator" class="caption font-weight-bold text-xs-center">{{ truncateString(16)(`${attr.name}`)}} ({{attr.code}})</span>
                   <span>{{ `${attr.name} (${attr.code})` }}</span>
                 </v-tooltip>
               </v-flex>
@@ -149,18 +149,18 @@
                 </v-progress-circular>
               </v-flex>
               <v-flex xs12 class="mx-3">
-                <h3 class="text-xs-center">{{ attr.count }} Entities</h3>
+                <span class="caption font-weight-bold text-xs-center">{{ attr.count }} Entities</span>
               </v-flex>
             </v-layout>
           </v-flex>
           </v-layout>
           <h2 class="ml-4 my-3">Profile 2</h2>
           <v-layout row>
-          <v-flex class="px-3 mx-5 my-3" xs3 v-for="attr in attributes2" v-bind:key="attr.code">
+          <v-flex class="px-3 mx-5" xs3 v-for="attr in attributes2" v-bind:key="attr.code">
             <v-layout align-center justify-center column fill-height>
               <v-flex xs12>
                 <v-tooltip top>
-                  <h3 slot="activator" class="text-xs-center">{{ truncateString(15)(`${attr.name} (${attr.code})`)}}</h3>
+                  <span slot="activator" class="caption font-weight-bold text-xs-center">{{ truncateString(16)(`${attr.name}`)}} ({{attr.code}})</span>
                   <span>{{ `${attr.name} (${attr.code})` }}</span>
                 </v-tooltip>
               </v-flex>
@@ -176,7 +176,7 @@
                 </v-progress-circular>
               </v-flex>
               <v-flex xs12 class="mx-3">
-                <h3 class="text-xs-center">{{ attr.count }} Entities</h3>
+                <span class="caption font-weight-bold text-xs-center">{{ attr.count }} Entities</span>
               </v-flex>
             </v-layout>
           </v-flex>
@@ -294,7 +294,7 @@ export default {
       datacollection: null,
       colors: ['red', 'orange', 'yellow'],
       datasets: [],
-      barColor1: 'blue',
+      barColor1: '#007fff',
       barcolor2: 'orange',
       facetValue: { '1': { 'any': 'any' }, '2': { 'any': 'any' } },
       facetOptionsData: {},

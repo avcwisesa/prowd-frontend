@@ -110,7 +110,7 @@
             <v-layout align-center justify-center column fill-height>
             <v-flex xs12>
               <v-tooltip top>
-                <h3 slot="activator" class="text-xs-center">{{ truncateString(15)(`${attr.name} (${attr.code})`)}}</h3>
+                <span slot="activator" class="caption font-weight-bold text-xs-center">{{ truncateString(16)(`${attr.name}`)}} ({{attr.code}})</span>
                 <span>{{ `${attr.name} (${attr.code})` }}</span>
               </v-tooltip>
             </v-flex>
@@ -126,7 +126,7 @@
               </v-progress-circular>
             </v-flex>
             <v-flex xs12 class="mx-3">
-              <h3 class="text-xs-center">{{ attr.count }} Entities</h3>
+              <span class="caption font-weight-bold text-xs-center">{{ attr.count }} Entities</span>
             </v-flex>
           </v-layout>
           </v-flex>
