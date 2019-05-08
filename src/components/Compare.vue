@@ -557,9 +557,9 @@ export default {
       var chartData = entities.reduce(reducer, acc)
 
       var score = 0
-      var div = 100 / chartData.length
+      var div = 100 / (chartData.length - 1)
       chartData.forEach(function (val, i) {
-        var weight = (i + 1) * div
+        var weight = i * div
         score += (weight * val)
       })
       score /= entities.length
