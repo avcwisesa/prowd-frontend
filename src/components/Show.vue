@@ -282,7 +282,7 @@ export default {
         attr.score = (100 * attr.count / entities.length)
       })
 
-      console.log(attributes)
+      // console.log(attributes)
       return attributes.sort(function (a, b) {
         return a.name.localeCompare(b.name)
       })
@@ -377,11 +377,10 @@ export default {
           var chartData = entities.reduce(reducer, acc)
 
           var score = 0
-          var div = 100 / chartData.length
+          var div = 100 / (chartData.length - 1)
           chartData.forEach(function (val, i) {
-            var weight = (i + 1) * div
+            var weight = i * div
             score += (weight * val)
-            // console.log(weight, val)
           })
           score /= entities.length
           this.$store.commit('SET_SCORE1', parseFloat(score.toFixed(2)))
