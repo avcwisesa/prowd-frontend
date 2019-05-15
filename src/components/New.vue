@@ -25,8 +25,8 @@
                 <v-subheader><h3>Description</h3></v-subheader>
             </v-flex>
             <v-flex xs7>
-                <v-textarea v-model=description required
-                    class="input-group--focused"
+                <v-textarea v-model=description required box
+                    class="input-group--focused mt-2"
                 ></v-textarea>
             </v-flex>
             <v-flex xs12>

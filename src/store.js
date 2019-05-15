@@ -11,6 +11,7 @@ const store = new Vuex.Store({
     alertMessage: 'alert',
     class: {},
     classElements: [],
+    description: '',
     facets: [],
     facetOptions: {},
     attributes: [],
@@ -52,6 +53,9 @@ const store = new Vuex.Store({
     },
     SET_PROFILENAME (state, name) {
       state.profileName = name
+    },
+    SET_DESCRIPTION (state, desc) {
+      state.description = desc
     },
     SET_CLASSNAME (state, name) {
       state.className = name
@@ -109,6 +113,7 @@ const store = new Vuex.Store({
           commit('SET_ATTRIBUTES', response.data.attributes)
           commit('SET_FACETS', response.data.facets)
           commit('SET_PROFILENAME', response.data.name)
+          commit('SET_DESCRIPTION', response.data.description)
           commit('SET_SUBCLASS', response.data.subclass)
           commit('SET_FILTERS', response.data.filters)
         })
