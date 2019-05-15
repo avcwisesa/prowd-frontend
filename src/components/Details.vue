@@ -9,8 +9,8 @@
               class="input-group--focused"
           ></v-text-field>
           <h2>Description</h2>
-          <v-textarea v-model=description required
-              class="input-group--focused"
+          <v-textarea v-model=description required box
+              class="input-group--focused mt-2"
           ></v-textarea>
           <h2>Class:</h2>
           <h2 class="black--text mt-3">{{ profileClass.name }} ({{ profileClass.code }})</h2>
