@@ -274,6 +274,7 @@ export default {
     this.profileName = this.$store.state.profileName
     this.subclass = this.$store.state.subclass
     this.profileClass = this.$store.state.class
+    this.description = this.$store.state.description
     console.log(this.profileClass)
     this.attributes = this.$store.state.attributes
     this.facets = this.$store.state.facets
