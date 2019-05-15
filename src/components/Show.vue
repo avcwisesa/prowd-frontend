@@ -180,6 +180,8 @@ import BarChart from '@/components/BarChart.vue'
 
 export default {
   async created () {
+    this.$store.commit('SET_ENTITIES1', [])
+    this.$store.commit('SET_SCORE1', 0)
     // console.log(this)
     var store = this.$store
     var router = this.$router.history.current

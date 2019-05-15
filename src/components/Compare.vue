@@ -270,6 +270,12 @@ export default {
     BarChart
   },
   async beforeCreate () {
+    this.loading = true
+    this.$store.commit('SET_SCORE1', 0)
+    this.$store.commit('SET_SCORE2', 0)
+    this.$store.commit('SET_ENTITIES1', [])
+    this.$store.commit('SET_ENTITIES2', [])
+
     var store = this.$store
     var router = this.$router.history.current
     await Promise.all([
@@ -277,8 +283,6 @@ export default {
       store.dispatch('FETCH_PROFILE_BY_ID', router.params.id),
       store.dispatch('FETCH_FACET_OPTIONS')
     ])
-    store.commit('SET_SCORE1', 0)
-    store.commit('SET_SCORE2', 0)
     await this.compareProfile()
     await this.fillFacets()
     console.log('done')
