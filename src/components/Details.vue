@@ -16,7 +16,7 @@
           <h2 class="black--text mt-3">{{ profileClass.name }} ({{ profileClass.code }})</h2>
           <v-card-text> {{ profileClass['description'] }} </v-card-text>
           <v-autocomplete
-            v-model="profileClass" label="Search class" :items="suggestedEntity" required box
+            v-model="profileClass" label="Search class" :items="suggested['entity']" required box
             item-text="name" return-object :search-input.sync="currClass"
           >
             <template
@@ -28,7 +28,7 @@
               </template>
               <template v-else>
                 <v-list-tile-content>
-                  <v-list-tile-title >{{data.item.name}} ({{data.item.code}})</v-list-tile-title>
+                  <v-list-tile-title >{{data.item.label}} ({{data.item.title}})</v-list-tile-title>
                   <v-list-tile-sub-title>{{data.item.description}}</v-list-tile-sub-title>
                 </v-list-tile-content>
               </template>
@@ -48,7 +48,7 @@
           <v-layout class="mt-2" row wrap>
             <v-flex xs4 class="mt-3">
               <v-autocomplete
-                v-model="filterProp" label="Property" :items="suggestedProp" required
+                v-model="filterProp" label="Property" :items="suggested['filterProp']" required
                 item-text="name" return-object :search-input.sync="currProp"
               >
                 <template
@@ -69,7 +69,7 @@
             </v-flex>
             <v-flex xs4 class="mt-3 mx-3">
               <v-autocomplete
-                v-model="filterValue" label="Value" :items="suggestedEntity" required
+                v-model="filterValue" label="Value" :items="suggested['filterEntity']" required
                 item-text="name" return-object :search-input.sync="currValue"
               >
                 <template
@@ -81,7 +81,7 @@
                   </template>
                   <template v-else>
                     <v-list-tile-content>
-                      <v-list-tile-title >{{data.item.name}} ({{data.item.code}})</v-list-tile-title>
+                      <v-list-tile-title >{{data.item.label}} ({{data.item.title}})</v-list-tile-title>
                       <v-list-tile-sub-title>{{data.item.description}}</v-list-tile-sub-title>
                     </v-list-tile-content>
                   </template>
@@ -105,7 +105,7 @@
           <h3 class="mt-3">Facets: </h3>
           <v-combobox
             v-model="facets" label="Edit facets" chips multiple clearable required
-            item-text="label" :items="suggestedProp" :search-input.sync="currFacet"
+            item-text="label" :items="suggested['facetProp']" :search-input.sync="currFacet"
           >
             <template slot="selection" slot-scope="data">
                 <v-chip
@@ -135,7 +135,7 @@
           <h3>Attributes: </h3>
           <v-combobox
             v-model="attributes" label="Edit attributes" chips multiple clearable required
-            item-text="label" :items="suggestedProp" :search-input.sync="currAttribute"
+            item-text="label" :items="suggested['attrProp']" :search-input.sync="currAttribute"
           >
             <template slot="selection" slot-scope="data">
                 <v-chip
@@ -179,7 +179,7 @@
                   </v-card-title>
 
                   <v-card-text>
-                      Are you sure you want to update this profile?
+                    Are you sure you want to update this profile?
                   </v-card-text>
 
                   <v-card-text>
@@ -275,7 +275,7 @@ export default {
     this.subclass = this.$store.state.subclass
     this.profileClass = this.$store.state.class
     this.description = this.$store.state.description
-    console.log(this.profileClass)
+    // console.log(this.profileClass)
     this.attributes = this.$store.state.attributes
     this.facets = this.$store.state.facets
     this.filters = this.$store.state.filters
@@ -338,36 +338,26 @@ export default {
     profileID () {
       return this.$route.params.id
     },
-    suggestedEntity () {
-      var entities = []
-      this.$store.state.suggestedEntity.forEach(element => {
-        entities.push({
-          name: element.label,
-          code: element.id,
-          description: element.description
-        })
-      })
-      return entities
-    },
-    suggestedProp () {
-      return this.$store.state.suggestedProperty
+    suggested () {
+      return this.$store.state.suggested
     }
   },
   watch: {
     currAttribute (query) {
-      this.propertySuggestion(query)
+      this.suggestion(query, 'property', 'attrProp')
     },
     currFacet (query) {
-      this.propertySuggestion(query)
+      this.suggestion(query, 'property', 'facetProp')
     },
     currClass (query) {
-      this.entitySuggestion(query)
+      this.suggestion(query, 'item', 'entity')
     },
     currProp (query) {
-      this.propertySuggestion(query)
+      this.suggestion(query, 'property', 'filterProp')
     },
     currValue (query) {
-      this.entitySuggestion(query)
+      console.log('ini querynya', query)
+      this.suggestion(query, 'item', 'filterEntity')
     }
   },
   methods: {
@@ -376,7 +366,7 @@ export default {
       this.$router.push({'path': '/profile/browse'})
     },
     async updateProfile () {
-      console.log(this.newProfile)
+      // console.log(this.newProfile)
       await this.$store.dispatch('UPDATE_PROFILE', {id: this.profileID, profile: this.newProfile})
       this.$router.push({'path': '/profile/' + this.profileID})
     },
@@ -390,11 +380,10 @@ export default {
       data.splice(data.indexOf(item), 1)
       data = [...data]
     },
-    entitySuggestion (query) {
-      this.$store.dispatch('SUGGESTER', { type: 'item', query: query })
-    },
-    propertySuggestion (query) {
-      this.$store.dispatch('SUGGESTER', { type: 'property', query: query })
+    suggestion (query, type, queryType) {
+      console.log('dispatch')
+      this.$store.dispatch('SUGGESTER', { type: type, query: query, queryType: queryType})
+      console.log('sug', this.$store.state.suggested[queryType])
     }
   }
 }

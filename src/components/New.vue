@@ -40,7 +40,7 @@
                       <h3 class="white--text mt-3">{{ profileClass['label'] }} ({{ profileClass['id'] }})</h3>
                       <v-card-text> {{ profileClass['description'] }} </v-card-text>
                       <v-autocomplete
-                        v-model="profileClass" label="Search class" :items="suggestedEntity" required box
+                        v-model="profileClass" label="Search class" :items="suggested['entity']" required box
                         item-text="label" return-object :search-input.sync="currClass"
                       >
                         <template
@@ -88,7 +88,7 @@
                   <v-layout class="mt-2" row wrap>
                     <v-flex xs4 class="mt-3">
                       <v-autocomplete
-                        v-model="filterProp" label="Property" :items="suggestedProp" required
+                        v-model="filterProp" label="Property" :items="suggested['filterProp']" required
                         item-text="label" return-object :search-input.sync="currProp"
                       >
                         <template
@@ -109,7 +109,7 @@
                     </v-flex>
                     <v-flex xs4 class="mt-3 mx-3">
                       <v-autocomplete
-                        v-model="filterValue" label="Value" :items="suggestedEntity" required
+                        v-model="filterValue" label="Value" :items="suggested['filterEntity']" required
                         item-text="label" return-object :search-input.sync="currValue"
                       >
                         <template
@@ -161,7 +161,7 @@
             <v-flex xs8>
               <v-combobox
                 v-model="facets" label="Add facets" chips multiple clearable required
-                item-text="label" :items="suggestedProp" :search-input.sync="currFacet"
+                item-text="label" :items="suggested['facetProp']" :search-input.sync="currFacet"
               >
                   <template slot="selection" slot-scope="data">
                       <v-chip
@@ -195,7 +195,7 @@
             <v-flex xs8>
               <v-combobox
                 v-model="attributes" label="Add attributes" chips multiple clearable required
-                item-text="label" :items="suggestedProp" :search-input.sync="currAttribute"
+                item-text="label" :items="suggested['attrProp']" :search-input.sync="currAttribute"
               >
                 <template slot="selection" slot-scope="data">
                     <v-chip
@@ -296,28 +296,25 @@ export default {
         subclass: this.subclass
       }
     },
-    suggestedEntity () {
-      return this.$store.state.suggestedEntity
+    suggested () {
+      return this.$store.state.suggested
     },
-    suggestedProp () {
-      return this.$store.state.suggestedProperty
-    }
   },
   watch: {
     currAttribute (query) {
-      this.propertySuggestion(query)
+      this.suggestion(query, 'property', 'attrProp')
     },
     currFacet (query) {
-      this.propertySuggestion(query)
+      this.suggestion(query, 'property', 'facetProp')
     },
     currClass (query) {
-      this.entitySuggestion(query)
+      this.suggestion(query, 'item', 'entity')
     },
     currProp (query) {
-      this.propertySuggestion(query)
+      this.suggestion(query, 'property', 'filterProp')
     },
     currValue (query) {
-      this.entitySuggestion(query)
+      this.suggestion(query, 'item', 'filterEntity')
     }
   },
   methods: {
@@ -336,11 +333,8 @@ export default {
         value: this.filterValue
       })
     },
-    entitySuggestion (query) {
-      this.$store.dispatch('SUGGESTER', { type: 'item', query: query })
-    },
-    propertySuggestion (query) {
-      this.$store.dispatch('SUGGESTER', { type: 'property', query: query })
+    suggestion (query, type, queryType) {
+      this.$store.dispatch('SUGGESTER', { type: type, query: query, queryType: queryType})
     }
   }
 }
