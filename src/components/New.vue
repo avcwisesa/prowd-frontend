@@ -135,7 +135,7 @@
                         top
                         small
                         right
-                        color="pink"
+                        color="blue"
                         @click="addFilter()"
                       >
                         <v-icon>add</v-icon>
@@ -229,10 +229,13 @@
                   <span class="text-xs-center subheading">Attribute Suggestions</span>
                 </v-flex>
                 <v-flex class="mx-3 mt-3">
-                  <v-chip v-for="attribute in attributeRecommendation" :key="attribute.code"
-                    color="red" text-color="white" @click="addAttribute(attribute)">
+                  <v-progress-linear v-if="recommendationLoading" :indeterminate="true"></v-progress-linear>
+                  <span v-if="attributeRecommendation.length == 0 && !recommendationLoading" class="text-xs-center">No recommendation</span>
+                  <v-chip v-for="attribute in attributeRecommendation.slice(0,10)" :key="attribute.code"
+                    color="wikiBlue" text-color="white" @click="addAttribute(attribute)">
                     <strong>{{ attribute.id }}</strong>&nbsp;
-                    <span>({{ attribute.label }})</span>
+                    <span>({{ attribute.label }})</span>&nbsp;
+                    <v-icon>add</v-icon>
                   </v-chip>
                 </v-flex>
               </v-layout>
@@ -240,7 +243,8 @@
             <v-flex xs12><v-card-text></v-card-text></v-flex>
             <v-flex xs6 offset-xs3 class="mb-3">
               <v-card-actions>
-                <v-btn block round @click="createProfile()" color="blue">CREATE</v-btn>
+                <v-btn block round @click="createProfile()" color="blue"
+                  class="subheading font-weight-medium white--text">CREATE</v-btn>
               </v-card-actions>
             </v-flex>
         </v-layout>
@@ -274,7 +278,9 @@ export default {
       currAttribute: '',
       currProp: '',
       currValue: '',
-      attributeRecommendation: []
+      attributeRecommendation: [],
+      recommendationFilter: new Set(['P31']),
+      recommendationLoading: false
     }
   },
   computed: {
@@ -313,7 +319,7 @@ export default {
     },
     suggested () {
       return this.$store.state.suggested
-    },
+    }
   },
   watch: {
     currAttribute (query) {
@@ -336,7 +342,25 @@ export default {
     },
     filters: function (newFilters, oldFilters) {
       this.attributeSuggestion()
-    }
+    },
+    filters: function (newFilters, oldFilters) {
+      newFilters.forEach((filter) => {
+        this.recommendationFilter.add(filter.prop.id)
+      })
+      this.attributeSuggestionFilter()
+    },
+    facets: function (newFacets, oldFacets) {
+      newFacets.forEach((facet) => {
+        this.recommendationFilter.add(facet.id)
+      })
+      this.attributeSuggestionFilter()
+    },
+    attributes: function (newAttributes, oldAttributes) {
+      newAttributes.forEach((attribute) => {
+        this.recommendationFilter.add(attribute.id)
+      })
+      this.attributeSuggestionFilter()
+    },
   },
   methods: {
     async createProfile () {
@@ -367,7 +391,6 @@ export default {
 
       var includeSubclass = ''
       if (this.subclass) includeSubclass = '/wdt:P279*'
-      console.log
 
       var query = `
         SELECT ?pFull ?pFullLabel ?cnt {
@@ -385,24 +408,29 @@ export default {
           }
           SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". } # get labels
         } ORDER BY DESC(?cnt)
-        limit 10
+        limit 20
       `
 
-      console.log(query)
+      // console.log(query)
+      this.recommendationLoading = true
       this.$axios.post("https://query.wikidata.org/" + 'sparql?query=' + encodeURIComponent(query))
       .then((response) => {
-        console.log(response.data)
-        console.log(response.data.results.bindings)
         var attributes = response.data.results.bindings
         this.attributeRecommendation = attributes.reduce((acc, attribute) => {
-          console.log(acc)
           acc.push({ id: attribute.pFull.value.split('/')[4], label: attribute.pFullLabel.value })
           return acc
         }, [])
+        this.attributeSuggestionFilter()
+        this.recommendationLoading = false
       })
       .catch((error) => {
         console.log(error)
       })
+    },
+    attributeSuggestionFilter () {
+      this.attributeRecommendation = this.attributeRecommendation.filter(
+        (attribute) => !this.recommendationFilter.has(attribute.id)
+      )
     }
   }
 }
