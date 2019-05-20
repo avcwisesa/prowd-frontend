@@ -192,7 +192,7 @@
             <v-flex xs3>
               <v-subheader><h3>Attributes</h3></v-subheader>
             </v-flex>
-            <v-flex xs8>
+            <v-flex xs4>
               <v-combobox
                 v-model="attributes" label="Add attributes" chips multiple clearable required
                 item-text="label" :items="suggested['attrProp']" :search-input.sync="currAttribute"
@@ -223,8 +223,22 @@
                 </template>
               </v-combobox>
             </v-flex>
-            <v-flex xs3><v-card-text></v-card-text></v-flex>
-            <v-flex xs6>
+            <v-flex xs5>
+              <v-layout column>
+                <v-flex>
+                  <span class="text-xs-center subheading">Attribute Suggestions</span>
+                </v-flex>
+                <v-flex class="mx-3 mt-3">
+                  <v-chip v-for="attribute in attributeRecommendation" :key="attribute.code"
+                    color="red" text-color="white" @click="addAttribute(attribute)">
+                    <strong>{{ attribute.id }}</strong>&nbsp;
+                    <span>({{ attribute.label }})</span>
+                  </v-chip>
+                </v-flex>
+              </v-layout>
+            </v-flex>
+            <v-flex xs12><v-card-text></v-card-text></v-flex>
+            <v-flex xs6 offset-xs3 class="mb-3">
               <v-card-actions>
                 <v-btn block round @click="createProfile()" color="blue">CREATE</v-btn>
               </v-card-actions>
@@ -259,7 +273,8 @@ export default {
       currFacet: '',
       currAttribute: '',
       currProp: '',
-      currValue: ''
+      currValue: '',
+      attributeRecommendation: []
     }
   },
   computed: {
@@ -315,6 +330,12 @@ export default {
     },
     currValue (query) {
       this.suggestion(query, 'item', 'filterEntity')
+    },
+    profileClass: function (newClass, oldClass) {
+      this.attributeSuggestion()
+    },
+    filters: function (newFilters, oldFilters) {
+      this.attributeSuggestion()
     }
   },
   methods: {
@@ -333,9 +354,62 @@ export default {
         value: this.filterValue
       })
     },
+    addAttribute (attribute) {
+      this.attributes.push(attribute)
+    },
     suggestion (query, type, queryType) {
       this.$store.dispatch('SUGGESTER', { type: type, query: query, queryType: queryType})
+    },
+    async attributeSuggestion () {
+      var filterQuery = this.filters.reduce((acc, filter) => {
+        return acc + ` ?s wdt:${filter.prop.id} wd:${filter.value.id}.`
+      }, "")
+
+      var includeSubclass = ''
+      if (this.subclass) includeSubclass = '/wdt:P279*'
+      console.log
+
+      var query = `
+        SELECT ?pFull ?pFullLabel ?cnt {
+          ?pFull wikibase:directClaim ?p .
+          {
+            SELECT ?p (COUNT(?s) AS ?cnt) {
+              SELECT DISTINCT ?s ?p
+              WHERE {
+              ?s wdt:P31${includeSubclass} wd:${this.profileClass.id}.
+              ${filterQuery}
+              ?s ?p ?o . # all triples
+              FILTER(STRSTARTS(STR(?p),"http://www.wikidata.org/prop/direct/")) # only select direct statements
+              }
+            } GROUP BY ?p
+          }
+          SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". } # get labels
+        } ORDER BY DESC(?cnt)
+        limit 10
+      `
+
+      console.log(query)
+      this.$axios.post("https://query.wikidata.org/" + 'sparql?query=' + encodeURIComponent(query))
+      .then((response) => {
+        console.log(response.data)
+        console.log(response.data.results.bindings)
+        var attributes = response.data.results.bindings
+        this.attributeRecommendation = attributes.reduce((acc, attribute) => {
+          console.log(acc)
+          acc.push({ id: attribute.pFull.value.split('/')[4], label: attribute.pFullLabel.value })
+          return acc
+        }, [])
+      })
+      .catch((error) => {
+        console.log(error)
+      })
     }
   }
 }
 </script>
+
+<style>
+.rborder {
+  border: 2px solid #7A1D2A;
+}
+</style>

@@ -26,8 +26,7 @@ const store = new Vuex.Store({
     profileName: '',
     profileClass: '',
     profiles: [],
-    suggestedEntity: [],
-    suggestedProperty: [],
+    suggestedAttribute: [],
     suggested: {},
     jumbotron: false,
     languages: []
@@ -183,7 +182,7 @@ const store = new Vuex.Store({
           } else {
             commitMethod = 'SET_SUGGESTED_PROPERTY'
           }
-          console.log(response.data.search, queryType)
+          // console.log(response.data.search, queryType)
           commit(commitMethod, {suggestion: response.data.search, type: queryType})
         }).catch((error) => {
           console.log(error)
@@ -192,7 +191,6 @@ const store = new Vuex.Store({
     LANGUAGES ({commit}) {
       return axios.get("https://www.wikidata.org/w/api.php" + `?action=query&format=json&origin=*&meta=siteinfo&siprop=languages`)
         .then((response) => {
-          // console.log(response.data.query.languages)
           commit('SET_LANGUAGES', response.data.query.languages)
         }).catch((error) => {
           console.log(error)
