@@ -40,7 +40,7 @@
                       <h3 class="white--text mt-3">{{ profileClass['label'] }} ({{ profileClass['id'] }})</h3>
                       <v-card-text> {{ profileClass['description'] }} </v-card-text>
                       <v-autocomplete
-                        v-model="profileClass" label="Search class" :items="suggested['entity']" required box
+                        v-model="profileClass" label="Search class" :items="suggestionClass" required box
                         item-text="label" return-object :search-input.sync="currClass"
                       >
                         <template
@@ -88,7 +88,7 @@
                   <v-layout class="mt-2" row wrap>
                     <v-flex xs4 class="mt-3">
                       <v-autocomplete
-                        v-model="filterProp" label="Property" :items="suggested['filterProp']" required
+                        v-model="filterProp" label="Property" :items="suggestionFilterProp" required
                         item-text="label" return-object :search-input.sync="currProp"
                       >
                         <template
@@ -109,7 +109,7 @@
                     </v-flex>
                     <v-flex xs4 class="mt-3 mx-3">
                       <v-autocomplete
-                        v-model="filterValue" label="Value" :items="suggested['filterEntity']" required
+                        v-model="filterValue" label="Value" :items="suggestionFilterValue" required
                         item-text="label" return-object :search-input.sync="currValue"
                       >
                         <template
@@ -161,7 +161,7 @@
             <v-flex xs8>
               <v-combobox
                 v-model="facets" label="Add facets" chips multiple clearable required
-                item-text="label" :items="suggested['facetProp']" :search-input.sync="currFacet"
+                item-text="label" :items="suggestionFacet" :search-input.sync="currFacet"
               >
                   <template slot="selection" slot-scope="data">
                       <v-chip
@@ -195,7 +195,7 @@
             <v-flex xs4>
               <v-combobox
                 v-model="attributes" label="Add attributes" chips multiple clearable required
-                item-text="label" :items="suggested['attrProp']" :search-input.sync="currAttribute"
+                item-text="label" :items="suggestionAttribute" :search-input.sync="currAttribute"
               >
                 <template slot="selection" slot-scope="data">
                     <v-chip
@@ -317,33 +317,43 @@ export default {
         subclass: this.subclass
       }
     },
-    suggested () {
-      return this.$store.state.suggested
+    suggestionClass () {
+      return this.$store.state.suggestionClass
+    },
+    suggestionFilterValue () {
+      return this.$store.state.suggestionFilterValue
+    },
+    suggestionFilterProp () {
+      return this.$store.state.suggestionFilterProp
+    },
+    suggestionFacet () {
+      return this.$store.state.suggestionFacet
+    },
+    suggestionAttribute () {
+      return this.$store.state.suggestionAttribute
     }
   },
   watch: {
-    currAttribute (query) {
-      this.suggestion(query, 'property', 'attrProp')
-    },
-    currFacet (query) {
-      this.suggestion(query, 'property', 'facetProp')
-    },
     currClass (query) {
-      this.suggestion(query, 'item', 'entity')
+      this.suggestion('SET_SUGGESTION_CLASS', query, 'item', 'entity')
     },
     currProp (query) {
-      this.suggestion(query, 'property', 'filterProp')
+      this.suggestion('SET_SUGGESTION_FILTER_PROP', query, 'property', 'filterProp')
     },
     currValue (query) {
-      this.suggestion(query, 'item', 'filterEntity')
+      this.suggestion('SET_SUGGESTION_FILTER_VALUE', query, 'item', 'filterEntity')
+    },
+    currFacet (query) {
+      this.suggestion('SET_SUGGESTION_FACET', query, 'property', 'facetProp')
+    },
+    currAttribute (query) {
+      this.suggestion('SET_SUGGESTION_ATTRIBUTE', query, 'property', 'attrProp')
     },
     profileClass: function (newClass, oldClass) {
       this.attributeSuggestion()
     },
     filters: function (newFilters, oldFilters) {
       this.attributeSuggestion()
-    },
-    filters: function (newFilters, oldFilters) {
       newFilters.forEach((filter) => {
         this.recommendationFilter.add(filter.prop.id)
       })
@@ -354,12 +364,14 @@ export default {
         this.recommendationFilter.add(facet.id)
       })
       this.attributeSuggestionFilter()
+      this.attributeSuggestion()
     },
     attributes: function (newAttributes, oldAttributes) {
       newAttributes.forEach((attribute) => {
         this.recommendationFilter.add(attribute.id)
       })
       this.attributeSuggestionFilter()
+      this.attributeSuggestion()
     },
   },
   methods: {
@@ -381,8 +393,8 @@ export default {
     addAttribute (attribute) {
       this.attributes.push(attribute)
     },
-    suggestion (query, type, queryType) {
-      this.$store.dispatch('SUGGESTER', { type: type, query: query, queryType: queryType})
+    suggestion (slot, query, type, queryType) {
+      this.$store.dispatch('SUGGESTER', { slot: slot, type: type, query: query })
     },
     async attributeSuggestion () {
       var filterQuery = this.filters.reduce((acc, filter) => {
@@ -408,7 +420,7 @@ export default {
           }
           SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". } # get labels
         } ORDER BY DESC(?cnt)
-        limit 20
+        limit 25
       `
 
       // console.log(query)
@@ -417,7 +429,10 @@ export default {
       .then((response) => {
         var attributes = response.data.results.bindings
         this.attributeRecommendation = attributes.reduce((acc, attribute) => {
-          acc.push({ id: attribute.pFull.value.split('/')[4], label: attribute.pFullLabel.value })
+          var re = new RegExp('ID')
+          if (!re.test(attribute.pFullLabel.value)) {
+            acc.push({ id: attribute.pFull.value.split('/')[4], label: attribute.pFullLabel.value })
+          }
           return acc
         }, [])
         this.attributeSuggestionFilter()

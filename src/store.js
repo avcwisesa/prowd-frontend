@@ -28,6 +28,11 @@ const store = new Vuex.Store({
     profiles: [],
     suggestedAttribute: [],
     suggested: {},
+    suggestionClass: [],
+    suggestionFilterProp: [],
+    suggestionFilterValue: [],
+    suggestionFacet: [],
+    suggestionAttribute: [],
     jumbotron: false,
     languages: []
   },
@@ -71,15 +76,23 @@ const store = new Vuex.Store({
     SET_PROFILES (state, profiles) {
       state.profiles = profiles
     },
-    SET_SUGGESTED_ENTITY (state, {suggestion, type}) {
-      state.suggested[type] = suggestion
+    SET_SUGGESTION_CLASS (state, {suggestion}) {
+      state.suggestionClass = suggestion
     },
-    SET_SUGGESTED_PROPERTY (state, {suggestion, type}) {
-      suggestion.forEach(element => {
-        element.name = element.label
-        element.code = element.id
-      })
-      state.suggested[type] = suggestion
+    SET_SUGGESTION_FILTER_PROP (state, {suggestion}) {
+      state.suggestionFilterProp = suggestion
+    },
+    SET_SUGGESTION_FILTER_VALUE (state, {suggestion}) {
+      state.suggestionFilterValue = suggestion
+    },
+    SET_SUGGESTION_FILTER_PROP (state, {suggestion}) {
+      state.suggestionFilterProp = suggestion
+    },
+    SET_SUGGESTION_FACET (state, {suggestion}) {
+      state.suggestionFacet = suggestion
+    },
+    SET_SUGGESTION_ATTRIBUTE (state, {suggestion}) {
+      state.suggestionAttribute = suggestion
     },
     SET_FACET_OPTIONS (state, {facet, options}) {
       state.facetOptions[facet] = options
@@ -173,17 +186,10 @@ const store = new Vuex.Store({
         })
       })
     },
-    SUGGESTER ({commit}, { type, query, queryType }) {
+    SUGGESTER ({commit}, { slot, type, query }) {
       return axios.post("https://www.wikidata.org/w/api.php" + `?action=wbsearchentities&format=json&origin=*&type=${type}&search=${query}&language=en`)
         .then((response) => {
-          var commitMethod = ''
-          if (type === 'item') {
-            commitMethod = 'SET_SUGGESTED_ENTITY'
-          } else {
-            commitMethod = 'SET_SUGGESTED_PROPERTY'
-          }
-          // console.log(response.data.search, queryType)
-          commit(commitMethod, {suggestion: response.data.search, type: queryType})
+          commit(slot, {suggestion: response.data.search})
         }).catch((error) => {
           console.log(error)
         })
