@@ -342,8 +342,6 @@ export default {
     },
     filters: function (newFilters, oldFilters) {
       this.attributeSuggestion()
-    },
-    filters: function (newFilters, oldFilters) {
       newFilters.forEach((filter) => {
         this.recommendationFilter.add(filter.prop.id)
       })
@@ -354,12 +352,14 @@ export default {
         this.recommendationFilter.add(facet.id)
       })
       this.attributeSuggestionFilter()
+      this.attributeSuggestion()
     },
     attributes: function (newAttributes, oldAttributes) {
       newAttributes.forEach((attribute) => {
         this.recommendationFilter.add(attribute.id)
       })
       this.attributeSuggestionFilter()
+      this.attributeSuggestion()
     },
   },
   methods: {
@@ -408,7 +408,7 @@ export default {
           }
           SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". } # get labels
         } ORDER BY DESC(?cnt)
-        limit 20
+        limit 25
       `
 
       // console.log(query)
@@ -417,7 +417,10 @@ export default {
       .then((response) => {
         var attributes = response.data.results.bindings
         this.attributeRecommendation = attributes.reduce((acc, attribute) => {
-          acc.push({ id: attribute.pFull.value.split('/')[4], label: attribute.pFullLabel.value })
+          var re = new RegExp('ID')
+          if (!re.test(attribute.pFullLabel.value)) {
+            acc.push({ id: attribute.pFull.value.split('/')[4], label: attribute.pFullLabel.value })
+          }
           return acc
         }, [])
         this.attributeSuggestionFilter()
