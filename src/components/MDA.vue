@@ -125,6 +125,12 @@
                   ({{entry.score.toFixed(2)}}% with {{ amount[entry.name] }} entities)
                 </li>
               </ul>
+              <div class="subheading font-weight-medium mt-3">Attribute Completeness Standard Deviation</div>
+              <ul>
+                <li v-for="entry in attributes" :key="entry.code">
+                  <strong>{{ entry.name }}</strong> ({{ insights[entry.code].sd.toFixed(2) }})
+                </li>
+              </ul>
               <div class="subheading font-weight-medium mt-3" v-if="insights.abnormalValues.high.length">
                 Attributes with Outlier Completeness (<span class="green--text font-weight-bold">High</span>):
               </div>
@@ -402,7 +408,6 @@ export default {
 
 
       entities.forEach((entity) => {
-        // console.log(entity)
         var label1 = entity[facets[0].code + 'Label'] || { value: 'none' }
 
         if (checkDuplicate[label1.value].has(entity.entity.value)) {
@@ -571,7 +576,6 @@ export default {
           }
         }
       })
-      // console.log(facetValues)
 
       var resultAmount = {}
       for (var i = 1; i <= 3; i++) {
@@ -751,7 +755,6 @@ export default {
             }
           }, 0)
           var percentage = Number.parseFloat(sum / size * 100)
-          // console.log(value1, value2, attribute, percentage)
           this.$data.insights[attribute].values.push({
             name: value1,
             facet1: value1,
@@ -861,8 +864,6 @@ export default {
     d3Processing (dataset) {
       this.$forceUpdate()
       this.$data.insights.completenessScore = []
-      // console.log(this.$data.d3f1v)
-      // console.log(this.$data.layer)
 
       this.$data.layerValues.forEach((layer) => {
         this.$data.d3f1v[layer.key].forEach((value1) => {
@@ -923,9 +924,6 @@ export default {
 
             this.$nextTick(() => {
               const ctx = document.getElementById(`${layer.key}-${value1}-${value2}`)
-              // console.log(`${layer.key}-${value1}-${value2}`)
-              // console.log(ctx)
-              // console.log(chartData)
               if (ctx && layer.key == this.$data.layer) {
                 this.createChart3D(this.$data.layerValues, [layer.key,value1,value2], chartData)
               }
@@ -956,7 +954,7 @@ export default {
     createChart (chartId, chartData) {
       const ctx = document.getElementById(chartId).getContext('2d')
       if (window[`${chartId}-chart`] != undefined) {
-        console.log(window[`${chartId}-chart`])
+        // console.log(window[`${chartId}-chart`])
         window[`${chartId}-chart`].destroy()
       }
       window[`${chartId}-chart`] = new Chart(ctx, {
@@ -1076,9 +1074,22 @@ export default {
           this.$data.insights[attr.code].values.sort((a,b) => a.value - b.value)
 
           if (this.$data.dimension == 2 || this.$data.dimension == 3) {
-            this.$data.insights[attr.code].avg = this.$data.insights[attr.code].values.reduce((acc, e) => acc + parseFloat(e.value), 0) / this.$data.insights[attr.code].values.length
+            var len = this.$data.insights[attr.code].values.length
+            var avg = this.$data.insights[attr.code].values.reduce((acc, e) => acc + parseFloat(e.value), 0) / len
+
+            this.$data.insights[attr.code].avg = avg
             this.$data.insights[attr.code].least = this.$data.insights[attr.code].values[0]
             this.$data.insights[attr.code].most = this.$data.insights[attr.code].values[this.$data.insights[attr.code].values.length-1]
+
+            var devSum = this.$data.insights[attr.code].values.reduce((acc, e) => {
+              var deviation = parseFloat(e.value) - avg
+              return acc + ( deviation * deviation )
+            }, 0)
+
+            // console.log(this.$data.insights[attr.code].values.map((e => e.value)))
+
+            this.$data.insights[attr.code].sd = Math.sqrt(devSum/(len - 1))
+
           } else if (this.$data.dimension == 1) {
             this.$data.f1v.forEach((facet) => {
               var avg = valuesByFacet[facet].reduce((acc, e) => acc + parseFloat(e), 0) / valuesByFacet[facet].length
@@ -1089,16 +1100,28 @@ export default {
             })
             valuesByFacet.values.sort((a,b) => a.value - b.value)
             // console.log(valuesByFacet.values)
-            this.$data.insights[attr.code].avg = valuesByFacet.values.reduce((acc, e) => acc + parseFloat(e.value), 0) / valuesByFacet.values.length
+
+            var len = valuesByFacet.values.length
+            var avg = valuesByFacet.values.reduce((acc, e) => acc + parseFloat(e.value), 0) / len
+
+            // console.log(valuesByFacet.values)
+
+            this.$data.insights[attr.code].avg = avg
             this.$data.insights[attr.code].least = valuesByFacet.values[0]
             this.$data.insights[attr.code].most = valuesByFacet.values[valuesByFacet.values.length-1]
+
+            var devSum = valuesByFacet.values.reduce((acc, e) => {
+              var deviation = parseFloat(e.value) - avg
+              return acc + ( deviation * deviation )
+            }, 0)
+
+            this.$data.insights[attr.code].sd = Math.sqrt(devSum/(len - 1))
           }
 
         })
 
       }
 
-      // console.log("check")
     },
     postQuery () {
       this.loading = true
