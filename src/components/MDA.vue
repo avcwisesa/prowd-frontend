@@ -1138,12 +1138,12 @@ export default {
       }, "")
       // console.log(queryFilter)
 
-      var queryOptional = this.attributeCodes.reduce((acc, code) => {
-        return acc + ` OPTIONAL {?entity wdt:${code} ?${code}}`
+      var queryAttributes = this.attributeCodes.reduce((acc, code) => {
+        return acc + ` OPTIONAL { BIND ("TRUE" AS ?${code}Label) FILTER EXISTS {?entity wdt:${code} ?${code}} }`
       }, "")
-      queryOptional = this.facets.reduce((acc, facet) => {
+      var queryFacets = this.facets.reduce((acc, facet) => {
         return acc + ` OPTIONAL {?entity wdt:${facet.code} ?${facet.code}}`
-      }, queryOptional)
+      }, "")
       // console.log(queryOptional)
 
       var includeSubclass = ''
@@ -1154,7 +1154,8 @@ export default {
         WHERE {
           ?entity wdt:P31${includeSubclass} wd:${this.class.code}.
           ${queryFilter}
-          ${queryOptional}
+          ${queryFacets}
+          ${queryAttributes}
           SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
         }
       `
