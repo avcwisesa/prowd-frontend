@@ -27,7 +27,7 @@
             </v-flex>
           </v-layout>
           <v-divider class="my-4"></v-divider>
-          <h2>Profile 1</h2>
+          <h2>Facet 1</h2>
           <v-layout row wrap>
             <v-flex xs8>
               <v-layout v-for="facet in facets" v-bind:key="facet.code" row wrap>
@@ -64,7 +64,7 @@
             </v-flex>
           </v-layout>
           <v-divider class="my-4"></v-divider>
-          <h2>Profile 2</h2>
+          <h2>Facet 2</h2>
           <v-layout row wrap>
             <v-flex xs8>
               <v-layout v-for="facet in facets" v-bind:key="facet.code" row wrap>
@@ -102,6 +102,20 @@
           </v-layout>
 
           <v-layout row wrap>
+            <v-flex xs2>
+              <v-autocomplete
+                v-model=languageCode label="label code" :items="languages" required box
+                item-text="code" item-value="code"
+              >
+                <template
+                  slot="item"
+                  slot-scope="data"
+                >
+                  {{data.item}}
+                </template>
+              </v-autocomplete>
+            </v-flex>
+            <v-flex xs10></v-flex>
             <v-flex xs2 v-if="facets.length > 0">
               <v-btn @click="compareProfile()" color="success"> Post Query </v-btn>
             </v-flex>
@@ -127,7 +141,7 @@
         <v-card-text class="text-xs-left">Degree of completeness for attributes of interest</v-card-text>
 
         <v-layout column align-content-center class="horiz-scroll">
-          <h2 class="ml-4 my-3">Profile 1</h2>
+          <h2 class="ml-4 my-3">Facet 1</h2>
           <v-layout row>
           <v-flex class="px-3 mx-5" xs3 v-for="attr in attributes" v-bind:key="attr.code">
             <v-layout align-center justify-center column fill-height>
@@ -154,7 +168,7 @@
             </v-layout>
           </v-flex>
           </v-layout>
-          <h2 class="ml-4 my-3">Profile 2</h2>
+          <h2 class="ml-4 my-3">Facet 2</h2>
           <v-layout row>
           <v-flex class="px-3 mx-5" xs3 v-for="attr in attributes2" v-bind:key="attr.code">
             <v-layout align-center justify-center column fill-height>
@@ -189,7 +203,7 @@
         <v-card-title class="display-1 mt-3"> Completeness table </v-card-title>
           <v-card-text class="text-xs-left">Completeness details of all entities within the profile</v-card-text>
               <v-card-title class="headline ml-3 my-2 text-xs-left">
-                Profile 1
+                Facet 1
                 <v-spacer></v-spacer>
                 <v-text-field
                   v-model="search[0]"
@@ -224,7 +238,7 @@
                 </v-data-table>
 
               <v-card-title class="headline ml-3 my-2 text-xs-left">
-                Profile 2
+                Facet 2
                 <v-spacer></v-spacer>
                 <v-text-field
                   v-model="search[1]"
@@ -302,6 +316,7 @@ export default {
       barcolor2: 'orange',
       facetValue: { '1': { 'any': 'any' }, '2': { 'any': 'any' } },
       facetOptionsData: {},
+      languageCode: 'en',
       loading: false,
       chartOptions: {
         maintainAspectRatio: false,
@@ -442,7 +457,10 @@ export default {
     },
     score2 () {
       return this.$store.state.score2
-    }
+    },
+    languages () {
+      return this.$store.state.languages
+    } 
   },
   methods: {
     getColor (i) {
@@ -495,7 +513,8 @@ export default {
         ?class wdt:P31${includeSubclass} wd:${this.class.code}.
         ${facetQueryString}
         ${filterExistQuery}
-        SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+        ?class rdfs:label ?classLabel .
+        FILTER(LANG(?classLabel)="${this.languageCode}")
         }
         LIMIT 10000
       `
@@ -518,7 +537,8 @@ export default {
               ?entity wdt:P31${includeSubclass} wd:${this.class.code}.
               ${classFilterQueryString}
               ?entity wdt:${facet.code} ?facet.
-              SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en,id,de,it". }
+              ?facet rdfs:label ?facetLabel .
+              FILTER(LANG(?facetLabel)="${this.languageCode}")
             }
             LIMIT 10000
           }

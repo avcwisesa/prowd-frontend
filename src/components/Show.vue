@@ -357,7 +357,8 @@ export default {
           ?class wdt:P31${includeSubclass} wd:${this.class.code}.
           ${facetQueryString}
           ${filterExistQueryString}
-          SERVICE wikibase:label { bd:serviceParam wikibase:language "${this.languageCode}, [AUTO_LANGUAGE]". }
+          ?class rdfs:label ?classLabel .
+          FILTER(LANG(?classLabel)="${this.languageCode}")
           }
           LIMIT 10000
         }
@@ -421,7 +422,8 @@ export default {
               ?entity wdt:P31${includeSubclass} wd:${this.class.code}.
               ${classFilterQueryString}
               ?entity wdt:${facet.code} ?facet.
-              SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en,id,de,it". }
+              ?facet rdfs:label ?facetLabel .
+              FILTER(LANG(?facetLabel)="${this.languageCode}")
             }
             LIMIT 10000
           }
