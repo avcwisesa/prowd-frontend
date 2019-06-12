@@ -551,8 +551,10 @@ export default {
               ?entity wdt:P31${includeSubclass} wd:${this.class.code}.
               ${classFilterQueryString}
               ?entity wdt:${facet.code} ?facet.
-              ?facet rdfs:label ?facetLabel .
-              FILTER(LANG(?facetLabel)="${this.languageCode}")
+              OPTIONAL {
+                ?facet rdfs:label ?facetLabel .
+                FILTER(LANG(?facetLabel)="${this.languageCode}")
+              }
             }
             LIMIT 10000
           }
@@ -562,10 +564,19 @@ export default {
       Promise.all(facetOptionsResults).then((completed) => {
         var tmp = {}
         completed.forEach(function (response) {
-          tmp[response.data.head.vars[2]] = response.data.results.bindings.map((obj) => {
-            return {
-              code: obj['facet']['value'].split('/')[4],
-              name: obj['facetLabel']['value']
+          tmp[response.data.head.vars[2]] = response.data.results.bindings
+          .filter((obj) => obj.facet.type != 'bnode')
+          .map((obj) => {
+            if (obj.facetLabel) {
+              return {
+                code: obj['facet']['value'].split('/')[4],
+                name: obj['facetLabel']['value']
+              }
+            } else {
+              return {
+                code: obj['facet']['value'].split('/')[4],
+                name: obj['facet']['value'].split('/')[4]
+              }
             }
           }).concat({ name: 'any', code: 'any' }).sort(function (a, b) {
             if (a.name > b.name) {
