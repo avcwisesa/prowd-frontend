@@ -229,7 +229,11 @@ export default {
       var attributes = JSON.parse(JSON.stringify(this.$store.state.attributes))
 
       entities.forEach(function (entity) {
-        entity.classLabel = entity.classLabel.value
+        if (entity.classLabel) {
+          entity.classLabel = entity.classLabel.value
+        } else {
+          entity.classLabel = entity.class.value.split('/')[4]
+        }
         entity.score = (100 * (Object.keys(entity).length - 2) / attributes.length)
       })
 
@@ -351,16 +355,19 @@ export default {
       var query = `
         SELECT DISTINCT ?class ${attributeVarQueryString}
         WHERE {
-          SELECT ?class ${attributeVarQueryString}
-          WHERE {
-          ${classFilterQueryString}
-          ?class wdt:P31${includeSubclass} wd:${this.class.code}.
-          ${facetQueryString}
-          ${filterExistQueryString}
-          ?class rdfs:label ?classLabel .
-          FILTER(LANG(?classLabel)="${this.languageCode}")
-          }
-          LIMIT 10000
+            {
+              SELECT DISTINCT ?class {
+                ${classFilterQueryString}
+                ?class wdt:P31${includeSubclass} wd:${this.class.code}.
+                ${facetQueryString}
+              }
+              LIMIT 10000
+            }
+            ${filterExistQueryString}
+            OPTIONAL {
+              ?class rdfs:label ?classLabel .
+              FILTER(LANG(?classLabel)="${this.languageCode}")
+            }
         }
       `
       // console.log(query)
@@ -422,8 +429,10 @@ export default {
               ?entity wdt:P31${includeSubclass} wd:${this.class.code}.
               ${classFilterQueryString}
               ?entity wdt:${facet.code} ?facet.
-              ?facet rdfs:label ?facetLabel .
-              FILTER(LANG(?facetLabel)="${this.languageCode}")
+              OPTIONAL {
+                ?class rdfs:label ?classLabel .
+                FILTER(LANG(?classLabel)="${this.languageCode}")
+              }
             }
             LIMIT 10000
           }
