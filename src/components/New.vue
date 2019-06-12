@@ -407,20 +407,26 @@ export default {
       var query = `
         SELECT ?pFull ?pFullLabel ?cnt {
           ?pFull wikibase:directClaim ?p .
+          MINUS {?pFull <http://wikiba.se/ontology#propertyType> <http://wikiba.se/ontology#ExternalId>}
           {
             SELECT ?p (COUNT(?s) AS ?cnt) {
-              SELECT DISTINCT ?s ?p
-              WHERE {
-              ?s wdt:P31${includeSubclass} wd:${this.profileClass.id}.
-              ${filterQuery}
-              ?s ?p ?o . # all triples
-              FILTER(STRSTARTS(STR(?p),"http://www.wikidata.org/prop/direct/")) # only select direct statements
+             SELECT DISTINCT ?s ?p WHERE {
+                {SELECT DISTINCT ?s {
+                  { SELECT ?s WHERE {
+                    ?s wdt:P31${includeSubclass} wd:${this.profileClass.id}.
+                    ${filterQuery}
+                  } LIMIT 1000 }
+                }}
+                OPTIONAL {
+                  ?s ?p ?o .
+                  FILTER(STRSTARTS(STR(?p),"http://www.wikidata.org/prop/direct/")) # only select direct statements
+                }
               }
             } GROUP BY ?p
           }
           SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". } # get labels
         } ORDER BY DESC(?cnt)
-        limit 25
+        limit 50
       `
 
       // console.log(query)
@@ -429,10 +435,7 @@ export default {
       .then((response) => {
         var attributes = response.data.results.bindings
         this.attributeRecommendation = attributes.reduce((acc, attribute) => {
-          var re = new RegExp('ID')
-          if (!re.test(attribute.pFullLabel.value)) {
-            acc.push({ id: attribute.pFull.value.split('/')[4], label: attribute.pFullLabel.value })
-          }
+          acc.push({ id: attribute.pFull.value.split('/')[4], label: attribute.pFullLabel.value })
           return acc
         }, [])
         this.attributeSuggestionFilter()
