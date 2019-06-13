@@ -551,10 +551,10 @@ export default {
               ?entity wdt:P31${includeSubclass} wd:${this.class.code}.
               ${classFilterQueryString}
               ?entity wdt:${facet.code} ?facet.
-              OPTIONAL {
+
                 ?facet rdfs:label ?facetLabel .
                 FILTER(LANG(?facetLabel)="${this.languageCode}")
-              }
+
             }
             LIMIT 10000
           }

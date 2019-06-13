@@ -80,10 +80,10 @@
                   <strong>{{ value }}</strong> ({{amount[value]}})
                 </li>
               </ul>
-              <div class="subheading font-weight-medium mt-3">Facet with Extreme Attribute Completeness:</div>
+              <div class="subheading font-weight-medium mt-3">Attribute Completeness:</div>
               <div v-for="entry in attributes" :key="entry.code">
                 <strong v-if="entry">{{ entry.name }} </strong>
-                <v-tooltip top>
+                <!-- <v-tooltip top>
                   <v-icon slot="activator">info</v-icon>
                   <span v-if="entry">
                     The average completeness for <strong>{{ entry.name }}</strong> is
@@ -91,18 +91,26 @@
                       {{ insights[entry.code].avg.toFixed(2) }}%
                     </strong>
                   </span>
-                </v-tooltip>
+                </v-tooltip> -->
                 <ul>
+                  <li>
+                    Average completeness: <strong v-if="insights[entry.code]">
+                      {{ insights[entry.code].avg.toFixed(2) }}%
+                    </strong>
+                  </li>
+                  <li>
+                    Standard deviation: <strong v-if="insights[entry.code]">
+                      {{ insights[entry.code].sd.toFixed(2) }}
+                    </strong>
+                  </li>
                   <li>
                     Most complete on <strong>{{ insights[entry.code].most.name }}</strong>
                     ({{ insights[entry.code].most.value.toFixed(2) }}%)
                   </li>
-
                   <li>
                     Least complete on <strong>{{ insights[entry.code].least.name }}</strong>
                     ({{ insights[entry.code].least.value.toFixed(2) }}%)
                   </li>
-
                 </ul>
               </div>
             </v-flex>
@@ -125,12 +133,12 @@
                   ({{entry.score.toFixed(2)}}% with {{ amount[entry.name] }} entities)
                 </li>
               </ul>
-              <div class="subheading font-weight-medium mt-3">Attribute Completeness Standard Deviation</div>
+              <!-- <div class="subheading font-weight-medium mt-3">Attribute Completeness Standard Deviation</div>
               <ul>
                 <li v-for="entry in attributes" :key="entry.code">
-                  <strong>{{ entry.name }}</strong> ({{ insights[entry.code].sd.toFixed(2) }})
+                  <strong>{{ entry.name }}</strong>: {{ insights[entry.code].sd.toFixed(2) }}
                 </li>
-              </ul>
+              </ul> -->
               <div class="subheading font-weight-medium mt-3" v-if="insights.abnormalValues.high.length">
                 Attributes with Outlier Completeness (<span class="green--text font-weight-bold">High</span>):
               </div>
