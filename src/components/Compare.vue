@@ -423,7 +423,11 @@ export default {
       var attributes = this.$store.state.attributes
 
       entities.forEach(function (entity) {
-        entity.classLabel = entity.classLabel.value
+        if (entity.classLabel) {
+          entity.classLabel = entity.classLabel.value
+        } else {
+          entity.classLabel = entity.class.value.split('/')[4]
+        }
         entity.score = (100 * (Object.keys(entity).length - 2) / attributes.length)
       })
 
@@ -434,7 +438,11 @@ export default {
       var attributes = this.$store.state.attributes
 
       entities.forEach(function (entity) {
-        entity.classLabel = entity.classLabel.value
+        if (entity.classLabel) {
+          entity.classLabel = entity.classLabel.value
+        } else {
+          entity.classLabel = entity.class.value.split('/')[4]
+        }
         entity.score = (100 * (Object.keys(entity).length - 2) / attributes.length)
       })
 
@@ -460,7 +468,7 @@ export default {
     },
     languages () {
       return this.$store.state.languages
-    } 
+    }
   },
   methods: {
     getColor (i) {
@@ -478,10 +486,10 @@ export default {
       this.loading = true
       console.log(this.attributeVariables)
       console.log(this.attributes)
-      var attributeVarQuery = this.attributeVariables.reduce(function (acc, attr) {
+      var attributeVarQueryString = this.attributeVariables.reduce(function (acc, attr) {
         return acc + ' ?' + attr
       }, '')
-      var filterExistQuery = this.attributes.reduce(function (acc, attr) {
+      var filterExistQueryString = this.attributes.reduce(function (acc, attr) {
         return acc + ` OPTIONAL {BIND ("TRUE" AS ?${attr.code}Exist) FILTER EXISTS{?class wdt:${attr.code} ?${attr.code}}}`
       }, '')
       var facetValue = this.facetValue[id]
@@ -507,16 +515,22 @@ export default {
       }, '')
 
       var query = `
-        SELECT DISTINCT ?class ${attributeVarQuery}
+        SELECT DISTINCT ?class ${attributeVarQueryString}
         WHERE {
-        ${classFilterQueryString}
-        ?class wdt:P31${includeSubclass} wd:${this.class.code}.
-        ${facetQueryString}
-        ${filterExistQuery}
-        ?class rdfs:label ?classLabel .
-        FILTER(LANG(?classLabel)="${this.languageCode}")
+            {
+              SELECT DISTINCT ?class {
+                ${classFilterQueryString}
+                ?class wdt:P31${includeSubclass} wd:${this.class.code}.
+                ${facetQueryString}
+              }
+              LIMIT 10000
+            }
+            ${filterExistQueryString}
+            OPTIONAL {
+              ?class rdfs:label ?classLabel .
+              FILTER(LANG(?classLabel)="${this.languageCode}")
+            }
         }
-        LIMIT 10000
       `
       console.log(query)
       return this.$axios.post("https://query.wikidata.org/" + 'sparql?query=' + encodeURIComponent(query))
@@ -537,8 +551,10 @@ export default {
               ?entity wdt:P31${includeSubclass} wd:${this.class.code}.
               ${classFilterQueryString}
               ?entity wdt:${facet.code} ?facet.
-              ?facet rdfs:label ?facetLabel .
-              FILTER(LANG(?facetLabel)="${this.languageCode}")
+
+                ?facet rdfs:label ?facetLabel .
+                FILTER(LANG(?facetLabel)="${this.languageCode}")
+
             }
             LIMIT 10000
           }
@@ -548,10 +564,19 @@ export default {
       Promise.all(facetOptionsResults).then((completed) => {
         var tmp = {}
         completed.forEach(function (response) {
-          tmp[response.data.head.vars[2]] = response.data.results.bindings.map((obj) => {
-            return {
-              code: obj['facet']['value'].split('/')[4],
-              name: obj['facetLabel']['value']
+          tmp[response.data.head.vars[2]] = response.data.results.bindings
+          .filter((obj) => obj.facet.type != 'bnode')
+          .map((obj) => {
+            if (obj.facetLabel) {
+              return {
+                code: obj['facet']['value'].split('/')[4],
+                name: obj['facetLabel']['value']
+              }
+            } else {
+              return {
+                code: obj['facet']['value'].split('/')[4],
+                name: obj['facet']['value'].split('/')[4]
+              }
             }
           }).concat({ name: 'any', code: 'any' }).sort(function (a, b) {
             if (a.name > b.name) {

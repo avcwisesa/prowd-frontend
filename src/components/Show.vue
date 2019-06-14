@@ -229,7 +229,11 @@ export default {
       var attributes = JSON.parse(JSON.stringify(this.$store.state.attributes))
 
       entities.forEach(function (entity) {
-        entity.classLabel = entity.classLabel.value
+        if (entity.classLabel) {
+          entity.classLabel = entity.classLabel.value
+        } else {
+          entity.classLabel = entity.class.value.split('/')[4]
+        }
         entity.score = (100 * (Object.keys(entity).length - 2) / attributes.length)
       })
 
@@ -351,16 +355,19 @@ export default {
       var query = `
         SELECT DISTINCT ?class ${attributeVarQueryString}
         WHERE {
-          SELECT ?class ${attributeVarQueryString}
-          WHERE {
-          ${classFilterQueryString}
-          ?class wdt:P31${includeSubclass} wd:${this.class.code}.
-          ${facetQueryString}
-          ${filterExistQueryString}
-          ?class rdfs:label ?classLabel .
-          FILTER(LANG(?classLabel)="${this.languageCode}")
-          }
-          LIMIT 10000
+            {
+              SELECT DISTINCT ?class {
+                ${classFilterQueryString}
+                ?class wdt:P31${includeSubclass} wd:${this.class.code}.
+                ${facetQueryString}
+              }
+              LIMIT 10000
+            }
+            ${filterExistQueryString}
+            OPTIONAL {
+              ?class rdfs:label ?classLabel .
+              FILTER(LANG(?classLabel)="${this.languageCode}")
+            }
         }
       `
       // console.log(query)
@@ -422,8 +429,10 @@ export default {
               ?entity wdt:P31${includeSubclass} wd:${this.class.code}.
               ${classFilterQueryString}
               ?entity wdt:${facet.code} ?facet.
-              ?facet rdfs:label ?facetLabel .
-              FILTER(LANG(?facetLabel)="${this.languageCode}")
+              OPTIONAL {
+                ?facet rdfs:label ?facetLabel .
+                FILTER(LANG(?facetLabel)="${this.languageCode}")
+              }
             }
             LIMIT 10000
           }
@@ -433,10 +442,19 @@ export default {
       Promise.all(facetOptionsResults).then((completed) => {
         var tmp = {}
         completed.forEach(function (response) {
-          tmp[response.data.head.vars[2]] = response.data.results.bindings.map((obj) => {
-            return {
-              code: obj['facet']['value'].split('/')[4],
-              name: obj['facetLabel']['value']
+          tmp[response.data.head.vars[2]] = response.data.results.bindings
+          .filter((obj) => obj.facet.type != 'bnode')
+          .map((obj) => {
+            if (obj.facetLabel) {
+              return {
+                code: obj['facet']['value'].split('/')[4],
+                name: obj['facetLabel']['value']
+              }
+            } else {
+              return {
+                code: obj['facet']['value'].split('/')[4],
+                name: obj['facet']['value'].split('/')[4]
+              }
             }
           }).concat({ name: 'any', code: 'any' }).sort(function (a, b) {
             if (a.name > b.name) {
