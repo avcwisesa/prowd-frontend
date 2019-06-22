@@ -222,8 +222,8 @@
                 >
                   <template slot="items" slot-scope="props">
                     <td v-for="attr in attributeVariables" v-bind:key="attr.code" v-if="props.item[attr]" class="text-xs-center">
-                      <div v-if="attr === 'classLabel'">
-                        <a v-bind:href="props.item['class'].value" target="_blank">
+                      <div v-if="attr === 'entityLabel'">
+                        <a v-bind:href="props.item['entity'].value" target="_blank">
                           <v-icon>link</v-icon>
                         </a>
                         {{props.item[attr]}}
@@ -257,8 +257,8 @@
                 >
                   <template slot="items" slot-scope="props">
                     <td v-for="attr in attributeVariables" v-bind:key="attr.code" v-if="props.item[attr]" class="text-xs-center">
-                      <div v-if="attr === 'classLabel'">
-                        <a v-bind:href="props.item['class'].value" target="_blank">
+                      <div v-if="attr === 'entityLabel'">
+                        <a v-bind:href="props.item['entity'].value" target="_blank">
                           <v-icon>link</v-icon>
                         </a>
                         {{props.item[attr]}}
@@ -347,7 +347,7 @@ export default {
       ret = ret.map(obj => {
         return { text: obj.name + ' (' + obj.code + ')', value: obj.code + 'Exist' }
       })
-      ret = [{ text: entityClass.name + ' (' + entityClass.code + ')', value: 'classLabel' }].concat(ret)
+      ret = [{ text: entityClass.name + ' (' + entityClass.code + ')', value: 'entityLabel' }].concat(ret)
       var headers = ret.concat({ text: 'completeness score', value: 'score' })
       return headers
     },
@@ -416,17 +416,17 @@ export default {
     attributeVariables () {
       var attrs = this.$store.state.attributes
       attrs = attrs.map(obj => obj.code + 'Exist')
-      return ['classLabel'].concat(attrs)
+      return ['entityLabel'].concat(attrs)
     },
     entities1 () {
       var entities = this.$store.state.entities1
       var attributes = this.$store.state.attributes
 
       entities.forEach(function (entity) {
-        if (entity.classLabel) {
-          entity.classLabel = entity.classLabel.value
+        if (entity.entityLabel) {
+          entity.entityLabel = entity.entityLabel.value
         } else {
-          entity.classLabel = entity.class.value.split('/')[4]
+          entity.entityLabel = entity.entity.value.split('/')[4]
         }
         entity.score = (100 * (Object.keys(entity).length - 2) / attributes.length)
       })
@@ -438,10 +438,10 @@ export default {
       var attributes = this.$store.state.attributes
 
       entities.forEach(function (entity) {
-        if (entity.classLabel) {
-          entity.classLabel = entity.classLabel.value
+        if (entity.entityLabel) {
+          entity.entityLabel = entity.entityLabel.value
         } else {
-          entity.classLabel = entity.class.value.split('/')[4]
+          entity.entityLabel = entity.entity.value.split('/')[4]
         }
         entity.score = (100 * (Object.keys(entity).length - 2) / attributes.length)
       })
@@ -490,7 +490,7 @@ export default {
         return acc + ' ?' + attr
       }, '')
       var filterExistQueryString = this.attributes.reduce(function (acc, attr) {
-        return acc + ` OPTIONAL {BIND ("TRUE" AS ?${attr.code}Exist) FILTER EXISTS{?class wdt:${attr.code} ?${attr.code}}}`
+        return acc + ` OPTIONAL {BIND ("TRUE" AS ?${attr.code}Exist) FILTER EXISTS{?entity wdt:${attr.code} ?${attr.code}}}`
       }, '')
       var facetValue = this.facetValue[id]
       var facetQuery = this.facets.reduce(function (acc, attr) {
@@ -502,7 +502,7 @@ export default {
       }, [])
       var facetQueryString = facetQuery.reduce(function (acc, attr) {
         if (attr.value !== 'wd:undefined') {
-          return acc + ` ?class wdt:${attr.code} ${attr.value}.`
+          return acc + ` ?entity wdt:${attr.code} ${attr.value}.`
         } else {
           return acc + ''
         }
@@ -511,24 +511,24 @@ export default {
       if (this.subclass) includeSubclass = '/wdt:P279*'
 
       var classFilterQueryString = this.filters.reduce(function (acc, filter) {
-        return acc + ` ?class wdt:${filter.prop.code} wd:${filter.value.code}.`
+        return acc + ` ?entity wdt:${filter.prop.code} wd:${filter.value.code}.`
       }, '')
 
       var query = `
-        SELECT DISTINCT ?class ${attributeVarQueryString}
+        SELECT DISTINCT ?entity ${attributeVarQueryString}
         WHERE {
             {
-              SELECT DISTINCT ?class {
+              SELECT DISTINCT ?entity {
                 ${classFilterQueryString}
-                ?class wdt:P31${includeSubclass} wd:${this.class.code}.
+                ?entity wdt:P31${includeSubclass} wd:${this.class.code}.
                 ${facetQueryString}
               }
               LIMIT 10000
             }
             ${filterExistQueryString}
             OPTIONAL {
-              ?class rdfs:label ?classLabel .
-              FILTER(LANG(?classLabel)="${this.languageCode}")
+              ?entity rdfs:label ?entityLabel .
+              FILTER(LANG(?entityLabel)="${this.languageCode}")
             }
         }
       `

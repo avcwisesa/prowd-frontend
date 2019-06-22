@@ -13,11 +13,11 @@
               class="input-group--focused mt-2"
           ></v-textarea>
           <h2>Class:</h2>
-          <h2 class="black--text mt-3">{{ profileClass.name }} ({{ profileClass.code }})</h2>
+          <h2 class="black--text mt-3">{{ profileClass.name || profileClass.label }} ({{ profileClass.code || profileClass.id }})</h2>
           <v-card-text> {{ profileClass['description'] }} </v-card-text>
           <v-autocomplete
-            v-model="profileClass" label="Search class" :items="suggested['entity']" required box
-            item-text="name" return-object :search-input.sync="currClass"
+            v-model="profileClass" label="Search class" :items="suggestionClass" required box
+            item-text="label" return-object :search-input.sync="currClass"
           >
             <template
               slot="item"
@@ -43,13 +43,13 @@
           <v-chip v-else v-for="filter in filters" v-bind:key="filter.code" close
           @input="remove(filters, filter)"
           >
-            {{filter.prop.name}}: {{filter.value.name}}
+            {{filter.prop.name || filter.prop.label}}: {{filter.value.name || filter.value.label}}
           </v-chip>
           <v-layout class="mt-2" row wrap>
             <v-flex xs4 class="mt-3">
               <v-autocomplete
-                v-model="filterProp" label="Property" :items="suggested['filterProp']" required
-                item-text="name" return-object :search-input.sync="currProp"
+                v-model="filterProp" label="Property" :items="suggestionFilterProp" required
+                item-text="label" return-object :search-input.sync="currProp"
               >
                 <template
                   slot="item"
@@ -60,7 +60,7 @@
                   </template>
                   <template v-else>
                     <v-list-tile-content>
-                      <v-list-tile-title >{{data.item.name}} ({{data.item.code}})</v-list-tile-title>
+                      <v-list-tile-title >{{data.item.label}} ({{data.item.id}})</v-list-tile-title>
                       <v-list-tile-sub-title>{{data.item.description}}</v-list-tile-sub-title>
                     </v-list-tile-content>
                   </template>
@@ -69,8 +69,8 @@
             </v-flex>
             <v-flex xs4 class="mt-3 mx-3">
               <v-autocomplete
-                v-model="filterValue" label="Value" :items="suggested['filterEntity']" required
-                item-text="name" return-object :search-input.sync="currValue"
+                v-model="filterValue" label="Value" :items="suggestionFilterValue" required
+                item-text="label" return-object :search-input.sync="currValue"
               >
                 <template
                   slot="item"
@@ -81,7 +81,7 @@
                   </template>
                   <template v-else>
                     <v-list-tile-content>
-                      <v-list-tile-title >{{data.item.label}} ({{data.item.title}})</v-list-tile-title>
+                      <v-list-tile-title >{{data.item.label}} ({{data.item.id}})</v-list-tile-title>
                       <v-list-tile-sub-title>{{data.item.description}}</v-list-tile-sub-title>
                     </v-list-tile-content>
                   </template>
@@ -105,7 +105,7 @@
           <h3 class="mt-3">Facets: </h3>
           <v-combobox
             v-model="facets" label="Edit facets" chips multiple clearable required
-            item-text="label" :items="suggested['facetProp']" :search-input.sync="currFacet"
+            item-text="label" :items="suggestionFacet" :search-input.sync="currFacet"
           >
             <template slot="selection" slot-scope="data">
                 <v-chip
@@ -113,8 +113,8 @@
                 close
                 @input="remove(facets, data.item)"
                 >
-                <strong>{{ data.item['code'] }}</strong>&nbsp;
-                <span>({{data.item['name']}})</span>
+                <strong>{{data.item.code || data.item.id}}</strong>&nbsp;
+                <span>({{data.item.name || data.item.label}})</span>
                 </v-chip>
             </template>
             <template
@@ -126,7 +126,7 @@
               </template>
               <template v-else>
                 <v-list-tile-content>
-                  <v-list-tile-title >{{data.item.name}} ({{data.item.code}})</v-list-tile-title>
+                  <v-list-tile-title >{{data.item.label}} ({{data.item.id}})</v-list-tile-title>
                   <v-list-tile-sub-title>{{data.item.description}}</v-list-tile-sub-title>
                 </v-list-tile-content>
               </template>
@@ -134,8 +134,8 @@
           </v-combobox>
           <h3>Attributes: </h3>
           <v-combobox
-            v-model="attributes" label="Edit attributes" chips multiple clearable required
-            item-text="label" :items="suggested['attrProp']" :search-input.sync="currAttribute"
+            v-model="attributes" label="Add attributes" chips multiple clearable required
+            item-text="label" :items="suggestionAttribute" :search-input.sync="currAttribute"
           >
             <template slot="selection" slot-scope="data">
                 <v-chip
@@ -143,8 +143,8 @@
                 close
                 @input="remove(attributes, data.item)"
                 >
-                <strong>{{ data.item['code'] }}</strong>&nbsp;
-                <span>({{data.item['name']}})</span>
+                <strong>{{data.item.code || data.item.id}}</strong>&nbsp;
+                <span>({{data.item.name || data.item.label}})</span>
                 </v-chip>
             </template>
             <template
@@ -156,7 +156,7 @@
               </template>
               <template v-else>
                 <v-list-tile-content>
-                  <v-list-tile-title >{{data.item.name}} ({{data.item.code}})</v-list-tile-title>
+                  <v-list-tile-title >{{data.item.label}} ({{data.item.id}})</v-list-tile-title>
                   <v-list-tile-sub-title>{{data.item.description}}</v-list-tile-sub-title>
                 </v-list-tile-content>
               </template>
@@ -184,14 +184,14 @@
 
                   <v-card-text>
                     <h2>Profile name: {{profileName}}</h2>
-                    <h2>Class: {{ `${profileClass.name} (${profileClass.code})` }}</h2>
+                    <h2>Class: {{ `${profileClass.name || profileClass.label} (${profileClass.code || profileClass.id})` }}</h2>
                     <div v-if="subclass">(subclass included)</div>
                     <h3 class="mt-3">Filters: </h3>
-                    <v-chip v-for="filter in filters" v-bind:key="filter.code">{{ `${filter.prop.name}: ${filter.value.name}` }}</v-chip>
+                    <v-chip v-for="filter in filters" v-bind:key="filter.code">{{ `${filter.prop.name || filter.prop.label}: ${filter.value.name || filter.value.label}` }}</v-chip>
                     <h3 class="mt-3">Facets: </h3>
-                    <v-chip v-for="facet in facets" v-bind:key="facet.code">{{ `${facet.name} (${facet.code})` }}</v-chip>
+                    <v-chip v-for="facet in facets" v-bind:key="facet.code">{{ `${facet.name || facet.label} (${facet.code || facet.id})` }}</v-chip>
                     <h3>Attributes: </h3>
-                    <v-chip v-for="attribute in attributes" v-bind:key="attribute.code">{{ `${attribute.name} (${attribute.code})` }}</v-chip>
+                    <v-chip v-for="attribute in attributes" v-bind:key="attribute.code">{{ `${attribute.name || attribute.label} (${attribute.code || attribute.id})` }}</v-chip>
                   </v-card-text>
 
                   <v-divider></v-divider>
@@ -307,29 +307,32 @@ export default {
       return {
         name: this.profileName,
         description: this.description,
-        class: JSON.stringify({ code: this.profileClass.code, name: this.profileClass.name }),
+        class: JSON.stringify({
+          code: this.profileClass.code || this.profileClass.id,
+          name: this.profileClass.name || this.profileClass.label
+        }),
         filters: JSON.stringify(this.filters.map(obj => {
           return {
             prop: {
-              name: obj.prop.name,
-              code: obj.prop.code
+              name: obj.prop.name || obj.prop.label,
+              code: obj.prop.code || obj.prop.id
             },
             value: {
-              name: obj.value.name,
-              code: obj.value.code
+              name: obj.value.name || obj.value.label,
+              code: obj.value.code || obj.value.id
             }
           }
         })),
         facets: JSON.stringify(this.facets.map(obj => {
           return {
-            code: obj.code,
-            name: obj.name
+            code: obj.code || obj.id,
+            name: obj.name || obj.label
           }
         })),
         attributes: JSON.stringify(this.attributes.map(obj => {
           return {
-            code: obj.code,
-            name: obj.name
+            code: obj.code || obj.id,
+            name: obj.name || obj.label
           }
         })),
         subclass: this.subclass
@@ -340,25 +343,39 @@ export default {
     },
     suggested () {
       return this.$store.state.suggested
+    },
+    suggestionClass () {
+      return this.$store.state.suggestionClass
+    },
+    suggestionFilterValue () {
+      return this.$store.state.suggestionFilterValue
+    },
+    suggestionFilterProp () {
+      return this.$store.state.suggestionFilterProp
+    },
+    suggestionFacet () {
+      return this.$store.state.suggestionFacet
+    },
+    suggestionAttribute () {
+      return this.$store.state.suggestionAttribute
     }
   },
   watch: {
-    currAttribute (query) {
-      this.suggestion(query, 'property', 'attrProp')
-    },
-    currFacet (query) {
-      this.suggestion(query, 'property', 'facetProp')
-    },
     currClass (query) {
-      this.suggestion(query, 'item', 'entity')
+      this.suggestion('SET_SUGGESTION_CLASS', query, 'item', 'entity')
     },
     currProp (query) {
-      this.suggestion(query, 'property', 'filterProp')
+      this.suggestion('SET_SUGGESTION_FILTER_PROP', query, 'property', 'filterProp')
     },
     currValue (query) {
-      console.log('ini querynya', query)
-      this.suggestion(query, 'item', 'filterEntity')
-    }
+      this.suggestion('SET_SUGGESTION_FILTER_VALUE', query, 'item', 'filterEntity')
+    },
+    currFacet (query) {
+      this.suggestion('SET_SUGGESTION_FACET', query, 'property', 'facetProp')
+    },
+    currAttribute (query) {
+      this.suggestion('SET_SUGGESTION_ATTRIBUTE', query, 'property', 'attrProp')
+    },  
   },
   methods: {
     async deleteProfile () {
@@ -380,11 +397,9 @@ export default {
       data.splice(data.indexOf(item), 1)
       data = [...data]
     },
-    suggestion (query, type, queryType) {
-      console.log('dispatch')
-      this.$store.dispatch('SUGGESTER', { type: type, query: query, queryType: queryType})
-      console.log('sug', this.$store.state.suggested[queryType])
-    }
+    suggestion (slot, query, type, queryType) {
+      this.$store.dispatch('SUGGESTER', { slot: slot, type: type, query: query })
+    },
   }
 }
 </script>
