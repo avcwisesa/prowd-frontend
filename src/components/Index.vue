@@ -1,6 +1,6 @@
 <template>
-  <v-container class="pt-4">
-    <v-layout row justify-space-around class="mt-5">
+  <v-container class="pt-1">
+    <v-layout row justify-space-around class="mt-4">
       <v-flex xs3>
         <img src="@/assets/search-512.png" style="width: 40%"/>
       </v-flex>
@@ -27,6 +27,9 @@
       <v-flex xs3>
         <v-card-text class="text-xs-center">{{ mdaPromo }}</v-card-text>
       </v-flex>
+    </v-layout>
+    <v-layout row justify-space-around class="mt-5">
+      <iframe width="871" height="490" src="https://www.youtube.com/embed/3jcXXx1uQU4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
     </v-layout>
   </v-container>
 </template>
