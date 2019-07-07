@@ -35,7 +35,7 @@
                       <v-subheader> {{facet.name}} ({{facet.code}}) </v-subheader>
                   </v-flex>
                   <v-flex xs6>
-                      <v-autocomplete :items="facetOptions[facet.code]" v-model="facetValue[1][facet.code]" item-text="name" item-value="code"
+                      <v-autocomplete :items="facetOptions[facet.code]" v-model="facetValue[1][facet.code]" item-text="name" return-object
                           class="input-group--focused" placeholder="any"
                       ></v-autocomplete>
                   </v-flex>
@@ -72,7 +72,7 @@
                       <v-subheader> {{facet.name}} ({{facet.code}}) </v-subheader>
                   </v-flex>
                   <v-flex xs6>
-                      <v-autocomplete :items="facetOptions[facet.code]" v-model="facetValue[2][facet.code]" item-text="name" item-value="code"
+                      <v-autocomplete :items="facetOptions[facet.code]" v-model="facetValue[2][facet.code]" item-text="name" return-object
                           class="input-group--focused" placeholder="any"
                       ></v-autocomplete>
                   </v-flex>
@@ -141,7 +141,7 @@
         <v-card-text class="text-xs-left">Degree of completeness for attributes of interest</v-card-text>
 
         <v-layout column align-content-center class="horiz-scroll">
-          <h2 class="ml-4 my-3">Facet 1</h2>
+          <h2 class="ml-4 my-3">Facet 1: {{ facet1Name }}</h2>
           <v-layout row>
           <v-flex class="px-3 mx-5" xs3 v-for="attr in attributes" v-bind:key="attr.code">
             <v-layout align-center justify-center column fill-height>
@@ -168,7 +168,7 @@
             </v-layout>
           </v-flex>
           </v-layout>
-          <h2 class="ml-4 my-3">Facet 2</h2>
+          <h2 class="ml-4 my-3">Facet 2: {{ facet2Name }}</h2>
           <v-layout row>
           <v-flex class="px-3 mx-5" xs3 v-for="attr in attributes2" v-bind:key="attr.code">
             <v-layout align-center justify-center column fill-height>
@@ -314,6 +314,8 @@ export default {
       datasets: [],
       barColor1: '#007fff',
       barcolor2: 'orange',
+      facet1Name: 'any',
+      facet2Name: 'any',
       facetValue: { '1': { 'any': 'any' }, '2': { 'any': 'any' } },
       facetOptionsData: {},
       languageCode: 'en',
@@ -494,8 +496,11 @@ export default {
       }, '')
       var facetValue = this.facetValue[id]
       var facetQuery = this.facets.reduce(function (acc, attr) {
-        if (facetValue[attr.code] !== 'any') {
-          return acc.concat({ code: attr.code, value: 'wd:' + facetValue[attr.code] })
+        if(!facetValue[attr.code]) {
+          return acc
+        }
+        if (facetValue[attr.code].code !== 'any') {
+          return acc.concat({ code: attr.code, value: 'wd:' + facetValue[attr.code].code })
         } else {
           return acc
         }
@@ -634,6 +639,22 @@ export default {
         datasets: this.datasets
       }
       this.loading = false
+      var facetValue = this.facetValue
+      try {
+        console.log(this.facetValue[1])
+        this.facet1Name = this.facets.reduce((acc, facet) => acc + facetValue[1][facet.code].name + "-","").slice(0,-1)
+      }
+      catch (err){
+        console.log(err)
+      }
+      try {
+        this.facet2Name = this.facets.reduce((acc, facet) => {
+          return acc + facetValue[2][facet.code].name+ "-"
+          } ,"").slice(0,-1)
+      }
+      catch (err){
+        console.log(err)
+      }
 
       this.warning = (this.entities1.length === 10000 || this.entities2.length === 10000)
     }
