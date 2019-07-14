@@ -1,5 +1,5 @@
 # ProWD Front End
-The front-end service of ProWD(http://prowd.id) is used to query Wikidata, profile thedata, and generate visualizations.
+The front-end service of [ProWD](http://prowd.id) is used to query Wikidata, profile thedata, and generate visualizations.
 
 
 ## Prerequisites & Setup
