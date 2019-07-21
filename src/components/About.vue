@@ -37,6 +37,10 @@
             </ul>
           </li>
         </ul>
+        <br>
+        Source code for ProWD can be accessed <a target="_blank" href="https://github.com/avcwisesa/prowd-frontend">here for the front-end service</a>, and <a target="_blank" href="https://github.com/avcwisesa/wikidata-profiling-prototype-back">here for the back-end service</a>.
+        <br>
+        ProWD thesis: <a target="_blank" href="https://drive.google.com/file/d/1-ufB4-mF_CpuSO6aLXjMJRFHUcWrT307/view">"Knowledge Graph Completeness Analytics: Cace Study of Wikidata"</a>
 
       </v-card-text>
       <v-card-title class="headline">Credits</v-card-title>
@@ -56,7 +60,6 @@
               <a href=https://www.iconfinder.com>Iconfinder</a>
             </li>
           </ul>
-</div>
       </v-card-text>
   </v-container>
 </template>
