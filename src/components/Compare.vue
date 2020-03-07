@@ -641,17 +641,26 @@ export default {
       this.loading = false
       var facetValue = this.facetValue
       try {
-        console.log(this.facetValue[1])
-        this.facet1Name = this.facets.reduce((acc, facet) => acc + facetValue[1][facet.code].name + "-","").slice(0,-1)
+	this.facet1Name = this.facets.reduce((acc, facet) => { 
+          if (facetValue[1][facet.code]) {
+            return acc + facetValue[1][facet.code].name + "-"
+          } else {
+            return acc + "any-"
+          }
+        },"").slice(0,-1)
       }
       catch (err){
         console.log(err)
       }
       try {
-        this.facet2Name = this.facets.reduce((acc, facet) => {
-          return acc + facetValue[2][facet.code].name+ "-"
-          } ,"").slice(0,-1)
-      }
+	this.facet2Name = this.facets.reduce((acc, facet) => {
+          if (facetValue[2][facet.code]) {
+            return acc + facetValue[2][facet.code].name+ "-"
+          } else {
+            return acc + "any-"
+          }
+        } ,"").slice(0,-1)
+	}
       catch (err){
         console.log(err)
       }
